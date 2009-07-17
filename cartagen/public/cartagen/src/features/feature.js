@@ -106,4 +106,5 @@ var Feature = Class.create(
 //= require "node"
 //= require "way"
 //= require "relation"
+//= require "coastline"
 //= require "label"
