@@ -1,0 +1,30 @@
+﻿Cartagen: A Framework for Dynamic Mapping (Client Edition)
+
+Version 0.5.1
+Released 7/8/17
+
+Please note that this is a beta release. There are know bugs and missing
+features. It is not intended for production systems.
+
+CHANGES
+
+- Fixed feature sorting
+
+- Much improved coastline support
+
+- GSS image support
+
+KNOWN BUGS
+
+- Automatic label rotation sometimes does not work properly. Investigation of
+  this issue is ongoing.
+  
+CONTRIBUTORS
+
+Cartagen is developed at the MIT Media Lab in Cambridge, MA, USA by Jeffrey
+Warren and Ben Weissmann. <http://wiki.cartagen.org/> has up-to-date
+information and resources on how to contribute to the project.
+  
+MORE INFORMATION
+
+<http://wiki.cartagen.org/> is the best source of information on Cartagen.
