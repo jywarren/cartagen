@@ -43,21 +43,19 @@ var Glop = {
 			return
 		}
 		$C.clear()
-		if (Cartagen.fullscreen) {
-			if (!custom_size) { // see Canvas.to_print_data_url()
-				Glop.width = document.viewport.getWidth()
-				Glop.height = document.viewport.getHeight()
-			}
-			$('canvas').width = Glop.width
-			$('canvas').height = Glop.height
-			$$('body')[0].style.width = Glop.width+"px"
+		if (!custom_size) { // see Canvas.to_print_data_url()
+			Glop.width = document.viewport.getWidth()
+			Glop.height = document.viewport.getHeight()
 		}
-		else {
-			Glop.width = $('canvas').getWidth()
-			Glop.height = $('canvas').getHeight()
-			$('canvas').width = Glop.width
-			$('canvas').height = Glop.height
-		}
+		$('canvas').width = Glop.width
+		$('canvas').height = Glop.height
+		$$('body')[0].style.width = Glop.width+"px"
+	
+		// for embedded
+		//Glop.width = $('canvas').getWidth()
+		//Glop.height = $('canvas').getHeight()
+		//$('canvas').width = Glop.width
+		//$('canvas').height = Glop.height
 		Events.drag()	
 		/**
 		 * @name Glop#glop:predraw

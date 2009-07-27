@@ -72,68 +72,15 @@ if (typeof cartagen_base_uri == 'undefined') {
  */
 var Cartagen = {
 	/** 
-	 * The number of objects drawn during the current frame.
-	 * @type Number
-	 */
-	object_count: 0,
-	/** 
-	 * The number of ways drawn during the current frame.
-	 * @type Number
-	 */
-	way_count: 0,
-	/**
-	 * The number of nodes drawn during the current frame, including nodes
-	 *  that are part of a way but are not drawn.
-	 *  @type Number
-	 */
-	node_count: 0,
-	/** 
 	 * The number of plots that have been requested, but have not been loaded yet.
 	 * @type Number
 	 */
 	requested_plots: 0,
 	/**
-	 * Current zoom level
-	 * @type Number
-	 */
-	zoom_level: 0.5,
-	/**
 	 * Hash of bbox => features
 	 * @type Hash
 	 */
 	plots: new Hash(),
-	/**
-	 * Hash of node id => node
-	 * @type Hash
-	 */
-	nodes: new Hash(),
-	/**
-	 * Hash of way id => way
-	 * @type Way
-	 */
-	ways: new Hash(),
-	/**
-	 * Hash of relation id => relation
-	 * @type Relation
-	 */
-	relations: new Hash(),
-	/**
-	 * Should Cartagen expand to fill the browser window?
-	 * @type Boolean
-	 */
-	fullscreen: true,
-	/**
-	 * The amound of bleed to use when requesting plots
-	 * @type Number
-	 * @see initial_bleed_level
-	 */
-	bleed_level: 1,
-	/**
-	 * How much plots bleed on the initial pageload
-	 * @type Number
-	 * @see bleed_level
-	 */
-	initial_bleed_level: 2,
 	/**
 	 * Queue of labels to draw
 	 * @type Label[]
@@ -144,22 +91,12 @@ var Cartagen = {
 	 */
 	feature_queue: [],
 	/**
-	 * Should deebug messages be sent to the console?
-	 * @type Boolean
-	 */
-	debug: false,
-	/**
 	 * An array of scripts that will be loaded when Cartagen is initialized.
 	 * 
 	 * @type String[]
 	 * @see Cartagen.initialize
 	 */
 	scripts: [],
-	/**
-	 * Whether to load user-submitted nodes and ways from the database
-	 * @type Boolean
-	 */
-	load_user_features: false,
 	/**
 	 * A TaskManager that performs feature parsing
 	 */
@@ -169,20 +106,9 @@ var Cartagen = {
 	 * @param {Object} configs A set of key/value pairs that will be copied to the Cartagen object
 	 */
 	setup: function(configs) {
-		// check if DOM loaded
-		//if (typeof document.getElementsByTagName != "undefined" &&
-		//	typeof document.getElementById != "undefined" &&
-		//    (document.getElementsByTagName("body")[0] !== null || document.body !== null )) {
-			
-			this.initialize(configs)
-		//}
-		//else {
-		//	// wait for DOM load:
-		//	console.log('observing')
-		//	console.log(document.readyState)
-		//	Event.observe(window, 'load', function(){console.log('fired')})
-		//	$(document).observe('dom:loaded', this.initialize.bindAsEventListener(this, configs))	
-		//}
+		$(document).observe('dom:loaded', function() {
+			Cartagen.initialize(configs)
+		})	
 	},
 	/**
 	 * Performs initialization tasks, mainly fetching map data. This should never be called directly,
@@ -261,10 +187,6 @@ var Cartagen = {
 	 */
 	draw: function(e) {
 		e.no_draw = true
-		
-		this.object_count = 0
-		this.way_count = 0
-		this.node_count = 0
 
 		if (Prototype.Browser.MobileSafari || window.PhoneGap) Config.simplify = 2
 		Style.style_body()
@@ -276,7 +198,7 @@ var Cartagen = {
         
         $C.translate(Glop.width / 2, Glop.height / 2)
         $C.rotate(Map.rotate)
-        $C.scale(Cartagen.zoom_level, Cartagen.zoom_level)
+        $C.scale(Map.zoom, Map.zoom)
         $C.translate((Glop.width / -2) + (-1 * Map.x) + (Glop.width / 2), (Glop.height / -2)+(-1 * Map.y) + (Glop.height / 2))
         
 		Viewport.draw() //adjust viewport
@@ -291,10 +213,10 @@ var Cartagen = {
 		// 	var h = Projection.lat_to_y(plot[1])-y
 		// 	$C.stroke_rect(x,y,w,h)
 		// 	$C.draw_text('Helvetica', 
-		// 	             9 / Cartagen.zoom_level, 
+		// 	             9 / Map.zoom, 
 		// 				 'rgba(0,0,0,0.5)', 
-		// 				 Projection.lon_to_x(plot[0]) + 3/Cartagen.zoom_level,
-		// 				 Projection.lat_to_y(plot[3]) - 3/Cartagen.zoom_level, 
+		// 				 Projection.lon_to_x(plot[0]) + 3/Map.zoom,
+		// 				 Projection.lat_to_y(plot[3]) - 3/Map.zoom, 
 		// 				 plot[4])
 		// })
 
@@ -305,8 +227,6 @@ var Cartagen = {
 		 */
 		$('canvas').fire('cartagen:predraw')
 		
-		Coastline.draw()
-
 		//Geohash lookup:
 		Geohash.objects.each(function(object) {
 			if (object.user_submitted) {
@@ -431,7 +351,7 @@ var Cartagen = {
 		// can't currently afford to have all nodes in the map as well as all ways.
 		// but we're missing some nodes when we render... semantic ones i think. cross-check.
 		// objects.push(n)
-		Cartagen.nodes.set(n.id,n)
+		Feature.nodes.set(n.id,n)
 		if (node.display) {
 			n.display = true
 			n.radius = 50
@@ -439,7 +359,7 @@ var Cartagen = {
 		}
 	},
 	parse_way: function(way){
-		if (Config.live || !Cartagen.ways.get(way.id)) {
+		if (Config.live || !Feature.ways.get(way.id)) {
 			var data = {
 				id: way.id,
 				user: way.user,
@@ -450,7 +370,7 @@ var Cartagen = {
 			if (way.name) data.name = way.name
 			way.nd.each(function(nd, index) {
 				if ((index % Config.simplify) == 0 || index == 0 || index == way.nd.length-1 || way.nd.length <= Config.simplify*2)  {
-					node = Cartagen.nodes.get(nd.ref)
+					node = Feature.nodes.get(nd.ref)
 					if (!Object.isUndefined(node)) data.nodes.push(node)
 				}
 			})
@@ -690,9 +610,9 @@ var Cartagen = {
 	 */
 	redirect_to_image: function() {
 		try {
-			document.location = $C.to_data_url();
-		} catch(e) {
-			alert("Sorry, this stylesheet uses remote images; JavaScript does not allow these to be used to generate an image.")
+				document.location = $C.to_data_url();
+			} catch(e) {
+				alert("Sorry, this stylesheet uses remote images; JavaScript does not allow these to be used to generate an image.")
 		}
 	},
 	/**

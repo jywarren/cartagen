@@ -15,7 +15,7 @@ var Coastline = {
 	 */
 	draw: function() {
 		Coastline.assembled_coastline = []
-		Cartagen.relations.values().each(function(object) {
+		Feature.relations.values().each(function(object) {
 			// invent a better way to trigger collect_nodes, based on Viewport change:
 			// if (Glop.frame == 0 || Glop.frame % 30 == 0) object.collect_nodes()
 			object.collect_nodes()
@@ -162,7 +162,7 @@ var Coastline = {
 		})
 		
 		var coastline_chains = Coastline.coastlines.clone()
-		Cartagen.relations = new Hash()
+		Feature.relations = new Hash()
 		while (coastline_chains.length > 0) {
 			var data = {
 				members: coastline_chains.first().chain([],true,true)
