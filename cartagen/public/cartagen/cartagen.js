@@ -4915,7 +4915,7 @@ var Config = {
 	lat: 41.89685,
 	lng: 12.49715,
 	fullscreen: false,
-	debug: true,
+	debug: false,
 	load_user_features: false,
 	aliases: $H({
 		stylesheet: ['gss']
