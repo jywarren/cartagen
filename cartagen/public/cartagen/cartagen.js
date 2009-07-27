@@ -4993,8 +4993,6 @@ var Cartagen = {
 	debug: false,
 	scripts: [],
 	load_user_features: false,
-	coastlines: [],
-	coastline_nodes: [],
 	parse_manager: null,
 	setup: function(configs) {
 
@@ -5070,90 +5068,7 @@ var Cartagen = {
 
 		$('canvas').fire('cartagen:predraw')
 
-		Cartagen.assembled_coastline = []
-		Cartagen.relations.values().each(function(object) {
-			object.collect_nodes()
-			if (object.coastline_nodes.length > 0) Cartagen.assembled_coastline.push([object.coastline_nodes,[object.entry_angle,object.exit_angle]])
-		})
-
-		if (Cartagen.assembled_coastline.length > 0) {
-			Cartagen.assembled_coastline.sort(Coastline.sort_coastlines_by_angle)
-
-			$C.begin_path()
-
-			var start_corner,end_corner,start_angle,end_angle
-			Cartagen.assembled_coastline.each(function(coastline,index) {
-				coastline.push(Viewport.nearest_corner(coastline[0].first()[0],coastline[0].first()[1]))
-				coastline.push(Viewport.nearest_corner(coastline[0].last()[0],coastline[0].last()[1]))
-			})
-
-			var corners = []
-
-			Cartagen.assembled_coastline.each(function(coastline,index) {
-				corners.push(coastline[2][2])
-				$C.move_to(coastline[2][0],coastline[2][1])
-
-
-
-				coastline[0].each(function(node,c_index) {
-					$C.line_to(node[0],node[1])
- 				})
-				$C.line_to(coastline[3][0],coastline[3][1])
-
-				if (Cartagen.assembled_coastline[index+1]) {
-					if (index != Cartagen.assembled_coastline.length-1) {
-						corners.push(coastline[3][2],coastline[2][2])
-						$l('walking to beginning!: '+coastline[3][2]+"/"+coastline[2][2]+':'+Coastline.walk(coastline[3][2],coastline[2][2],false).inspect())
-						Coastline.walk(coastline[3][2],coastline[2][2],false).each(function(n) {
-							$C.line_to(n[0],n[1])
-						})
-					}
-					if (coastline[2][2] != Cartagen.assembled_coastline[index+1][2][2]) {
-						corners.push(coastline[2][2],Cartagen.assembled_coastline[index+1][2][2])
-						$l('walking to next!: '+coastline[2][2]+"/"+Cartagen.assembled_coastline[index+1][2][2]+':'+Coastline.walk(coastline[2][2],Cartagen.assembled_coastline[index+1][2][2]).inspect())
-						Coastline.walk(coastline[2][2],Cartagen.assembled_coastline[index+1][2][2]).each(function(n) {
-							$C.line_to(n[0],n[1])
-						})
-					}
-				}
-
-				if (index == 0) {
-					start_corner = coastline[2]
-					start_angle = coastline[1][0]
-				}
-				if (index == Cartagen.assembled_coastline.length-1) {
-					end_corner = coastline[3]
-					end_angle = coastline[1][1]
-				}
-			},this)
-
-
-
-			if ((end_corner[2] == start_corner[2]) && (end_angle < start_angle)) {
-			} else if (end_corner[2] != start_corner[2] || end_angle > start_angle) {
-				corners.push(end_corner[2],start_corner[2])
-				$l('walking around!: '+end_corner[2]+"/"+start_corner[2]+':'+Coastline.walk(end_corner[2],start_corner[2]).inspect())
-				Coastline.walk(end_corner[2],start_corner[2]).each(function(n) {
-					$C.line_to(n[0],n[1])
-				})
-			}
-			$l('ending: '+corners)
-
-			var coastline_style = Style.styles.relation
-			if (coastline_style.lineWidth) $C.line_width(coastline_style.lineWidth)
-			if (coastline_style.strokeStyle) $C.stroke_style(coastline_style.strokeStyle)
-			if (coastline_style.opacity) $C.opacity(coastline_style.opacity)
-			$C.stroke()
-			if (coastline_style.pattern) {
-				if (!coastline_style.pattern.src) {
-					var value = coastline_style.pattern
-					coastline_style.pattern = new Image()
-					coastline_style.pattern.src = value
-				}
-				$C.fill_pattern(coastline_style.pattern, 'repeat')
-			} else $C.fill_style(coastline_style.fillStyle)
-			$C.fill()
-		}
+		Coastline.draw()
 
 		Geohash.objects.each(function(object) {
 			if (object.user_submitted) {
@@ -5277,33 +5192,6 @@ var Cartagen = {
 			new Way(data)
 		}
 	},
-	refresh_coastlines: function() {
-		Cartagen.coastlines.each(function(c){c.neighbors = []})
-		Cartagen.coastlines.each(function(coastline_a) {
-			Cartagen.coastlines.each(function(coastline_b) {
-				if (coastline_a.id != coastline_b.id) {
-					if (coastline_a.nodes.last().id == coastline_b.nodes.first().id) {
-						coastline_a.neighbors[1] = coastline_b
-						coastline_b.neighbors[0] = coastline_a
-					}
-				}
-			})
-		})
-
-		var coastline_chains = Cartagen.coastlines.clone()
-		Cartagen.relations = new Hash()
-		while (coastline_chains.length > 0) {
-			var data = {
-				members: coastline_chains.first().chain([],true,true)
-			}
-			data.members.each(function(member) {
-				coastline_chains.each(function(coastline,index) {
-					if (coastline.id == member.id) coastline_chains.splice(index,1)
-				})
-			})
-			new Relation(data)
-		}
-	},
 	parse_objects: function(data, key) {
 
 		var cond;
@@ -5318,7 +5206,7 @@ var Cartagen = {
 
 		node_task = new Task(data.osm.node, Cartagen.parse_node, cond)
 		way_task = new Task(data.osm.way, Cartagen.parse_way, cond, [node_task.id])
-		coastline_task = new Task(['placeholder'], Cartagen.refresh_coastlines, cond, [way_task.id])
+		coastline_task = new Task(['placeholder'], Coastline.refresh_coastlines, cond, [way_task.id])
 		Cartagen.parse_manager.add(node_task)
 		Cartagen.parse_manager.add(way_task)
 		Cartagen.parse_manager.add(coastline_task)
@@ -5436,7 +5324,11 @@ var Cartagen = {
 		Config.live_gss = !Config.live_gss
 	},
 	redirect_to_image: function() {
-		document.location = $C.to_data_url();
+		try {
+			document.location = $C.to_data_url();
+		} catch(e) {
+			alert("Sorry, this stylesheet uses remote images; JavaScript does not allow these to be used to generate an image.")
+		}
 	},
 	load_next_script: function() {
 		$l("loading: "+Cartagen.scripts[0])
@@ -6300,6 +6192,121 @@ var Label = Class.create(
 })
 
 var Coastline = {
+	coastlines: [],
+	coastline_nodes: [],
+	draw: function() {
+		Coastline.assembled_coastline = []
+		Cartagen.relations.values().each(function(object) {
+			object.collect_nodes()
+			if (object.coastline_nodes.length > 0) Coastline.assembled_coastline.push([object.coastline_nodes,[object.entry_angle,object.exit_angle]])
+		})
+
+		if (Coastline.assembled_coastline.length > 0) {
+			Coastline.assembled_coastline.sort(Coastline.sort_coastlines_by_angle)
+
+			$C.begin_path()
+
+			var start_corner,end_corner,start_angle,end_angle
+			Coastline.assembled_coastline.each(function(coastline,index) {
+				coastline.push(Viewport.nearest_corner(coastline[0].first()[0],coastline[0].first()[1]))
+				coastline.push(Viewport.nearest_corner(coastline[0].last()[0],coastline[0].last()[1]))
+			})
+
+			var corners = []
+
+			Coastline.assembled_coastline.each(function(coastline,index) {
+				corners.push(coastline[2][2])
+				$C.move_to(coastline[2][0],coastline[2][1])
+
+
+
+				coastline[0].each(function(node,c_index) {
+					$C.line_to(node[0],node[1])
+				})
+				$C.line_to(coastline[3][0],coastline[3][1])
+
+				if (Coastline.assembled_coastline[index+1]) {
+					if (index != Coastline.assembled_coastline.length-1) {
+						corners.push(coastline[3][2],coastline[2][2])
+						$l('walking to beginning!: '+coastline[3][2]+"/"+coastline[2][2]+':'+Coastline.walk(coastline[3][2],coastline[2][2],false).inspect())
+						Coastline.walk(coastline[3][2],coastline[2][2],false).each(function(n) {
+							$C.line_to(n[0],n[1])
+						})
+					}
+					if (coastline[2][2] != Coastline.assembled_coastline[index+1][2][2]) {
+						corners.push(coastline[2][2],Coastline.assembled_coastline[index+1][2][2])
+						$l('walking to next!: '+coastline[2][2]+"/"+Coastline.assembled_coastline[index+1][2][2]+':'+Coastline.walk(coastline[2][2],Coastline.assembled_coastline[index+1][2][2]).inspect())
+						Coastline.walk(coastline[2][2],Coastline.assembled_coastline[index+1][2][2]).each(function(n) {
+							$C.line_to(n[0],n[1])
+						})
+					}
+				}
+
+				if (index == 0) {
+					start_corner = coastline[2]
+					start_angle = coastline[1][0]
+				}
+				if (index == Coastline.assembled_coastline.length-1) {
+					end_corner = coastline[3]
+					end_angle = coastline[1][1]
+				}
+			},this)
+
+
+
+			if ((end_corner[2] == start_corner[2]) && (end_angle < start_angle)) {
+			} else if (end_corner[2] != start_corner[2] || end_angle > start_angle) {
+				corners.push(end_corner[2],start_corner[2])
+				$l('walking around!: '+end_corner[2]+"/"+start_corner[2]+':'+Coastline.walk(end_corner[2],start_corner[2]).inspect())
+				Coastline.walk(end_corner[2],start_corner[2]).each(function(n) {
+					$C.line_to(n[0],n[1])
+				})
+			}
+			$l('ending: '+corners)
+
+			var coastline_style = Style.styles.relation
+			if (coastline_style.lineWidth) $C.line_width(coastline_style.lineWidth)
+			if (coastline_style.strokeStyle) $C.stroke_style(coastline_style.strokeStyle)
+			if (coastline_style.opacity) $C.opacity(coastline_style.opacity)
+			$C.stroke()
+			if (coastline_style.pattern) {
+				if (!coastline_style.pattern.src) {
+					var value = coastline_style.pattern
+					coastline_style.pattern = new Image()
+					coastline_style.pattern.src = value
+				}
+				$C.fill_pattern(coastline_style.pattern, 'repeat')
+			} else $C.fill_style(coastline_style.fillStyle)
+			$C.fill()
+		}
+	},
+	refresh_coastlines: function() {
+		Coastline.coastlines.each(function(c){c.neighbors = []})
+		Coastline.coastlines.each(function(coastline_a) {
+			Coastline.coastlines.each(function(coastline_b) {
+				if (coastline_a.id != coastline_b.id) {
+					if (coastline_a.nodes.last().id == coastline_b.nodes.first().id) {
+						coastline_a.neighbors[1] = coastline_b
+						coastline_b.neighbors[0] = coastline_a
+					}
+				}
+			})
+		})
+
+		var coastline_chains = Coastline.coastlines.clone()
+		Cartagen.relations = new Hash()
+		while (coastline_chains.length > 0) {
+			var data = {
+				members: coastline_chains.first().chain([],true,true)
+			}
+			data.members.each(function(member) {
+				coastline_chains.each(function(coastline,index) {
+					if (coastline.id == member.id) coastline_chains.splice(index,1)
+				})
+			})
+			new Relation(data)
+		}
+	},
 	walk: function(start,end,clockwise) {
 		if (Object.isUndefined(clockwise)) clockwise = true
 		$l(start+'/'+end+',clockwise '+clockwise+': '+this.walk_n(start,end,clockwise))
