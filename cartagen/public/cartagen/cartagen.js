@@ -6698,19 +6698,19 @@ var Events = {
 	},
 	wheel: function(event){
 		if (Events.enabled == false) return
-		var delta = 0;
-		if (!event) event = window.event;
+		var delta = 0
+		if (!event) event = window.event
 		if (event.wheelDelta) {
-			delta = event.wheelDelta/120;
-			if (window.opera) delta = -delta;
+			delta = event.wheelDelta/120
+			if (window.opera) delta = -delta
 		} else if (event.detail) {
-			delta = -event.detail/3;
+			delta = -event.detail/3
 		}
 		if (delta && !Config.live_gss) {
 			if (delta <0) {
-				Map.zoom += delta/80
+				Map.zoom = (Map.zoom * 1) + (delta/80)
 			} else {
-				Map.zoom += delta/80
+				Map.zoom = (Map.zoom * 1) + (delta/80)
 			}
 			if (Map.zoom < Config.zoom_out_limit) Map.zoom = Config.zoom_out_limit
 		}
