@@ -1,5 +1,21 @@
 var Coastline = {
 	/**
+	 * 
+	 */
+	initialize: function() {
+		// Cartagen.observe('predraw',		'draw',this)
+		// Cartagen.observe('postdraw',		'cleanup',this)
+		// Cartagen.observe('initialize',	'setup',this)
+
+		// Cartagen.observe({
+		// 	predraw: 'a',
+		// 	draw: 'b',
+		// 	postdraw: 'c'
+		// }, this)
+		
+		$('canvas').observe('cartagen:predraw', Coastline.draw.bindAsEventListener(this))
+	},
+	/**
 	 * Array of coastline ways to be assembled occasionally into coastline 'collected way' relations
 	 */
 	coastlines: [],
@@ -13,11 +29,17 @@ var Coastline = {
 	/**
 	 * 
 	 */
+	assembled_coastline: [],
+	/**
+	 * 
+	 */
 	draw: function() {
+		$l('draw me!!!')
 		Coastline.assembled_coastline = []
 		Feature.relations.values().each(function(object) {
 			// invent a better way to trigger collect_nodes, based on Viewport change:
 			// if (Glop.frame == 0 || Glop.frame % 30 == 0) object.collect_nodes()
+			$l(this.id+' relation')
 			object.collect_nodes()
 			if (object.coastline_nodes.length > 0) Coastline.assembled_coastline.push([object.coastline_nodes,[object.entry_angle,object.exit_angle]])
 		})
@@ -262,3 +284,5 @@ var Coastline = {
 	 */
 	sort_coastlines_by_angle: function(a,b) { return (a[1][0] - b[1][0]) }
 }
+
+document.observe('cartagen:init', Coastline.initialize.bindAsEventListener(Coastline))

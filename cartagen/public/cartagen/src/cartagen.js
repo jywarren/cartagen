@@ -183,7 +183,7 @@ var Cartagen = {
         $C.translate(Glop.width / 2, Glop.height / 2)
         $C.rotate(Map.rotate)
         $C.scale(Map.zoom, Map.zoom)
-        $C.translate((Glop.width / -2) + (-1 * Map.x) + (Glop.width / 2), (Glop.height / -2)+(-1 * Map.y) + (Glop.height / 2))
+        $C.translate(-Map.x,-Map.y)
         
 		Viewport.draw() //adjust viewport
 		
@@ -261,7 +261,7 @@ var Cartagen = {
      * @param {Number} zoom_level     zoom_level to set the map to
 	 */
 	go_to: function(lat,lon,zoom_level) {
-		Mpa.zoom = zoom_level
+		Map.zoom = zoom_level
 		Map.lat = lat
 		Map.lon = lon
 		Map.x = Projection.lon_to_x(Map.lon)
@@ -301,7 +301,7 @@ var Cartagen = {
 	 */
 	redirect_to_image: function() {
 		try {
-				document.location = $C.to_data_url();
+				window.open($C.to_data_url())
 			} catch(e) {
 				alert("Sorry, this stylesheet uses remote images; JavaScript does not allow these to be used to generate an image.")
 		}

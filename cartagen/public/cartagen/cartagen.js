@@ -5044,7 +5044,7 @@ var Cartagen = {
         $C.translate(Glop.width / 2, Glop.height / 2)
         $C.rotate(Map.rotate)
         $C.scale(Map.zoom, Map.zoom)
-        $C.translate((Glop.width / -2) + (-1 * Map.x) + (Glop.width / 2), (Glop.height / -2)+(-1 * Map.y) + (Glop.height / 2))
+        $C.translate(-Map.x,-Map.y)
 
 		Viewport.draw() //adjust viewport
 
@@ -5092,7 +5092,7 @@ var Cartagen = {
 		}
 	},
 	go_to: function(lat,lon,zoom_level) {
-		Mpa.zoom = zoom_level
+		Map.zoom = zoom_level
 		Map.lat = lat
 		Map.lon = lon
 		Map.x = Projection.lon_to_x(Map.lon)
@@ -5121,7 +5121,7 @@ var Cartagen = {
 	},
 	redirect_to_image: function() {
 		try {
-				document.location = $C.to_data_url();
+				window.open($C.to_data_url())
 			} catch(e) {
 				alert("Sorry, this stylesheet uses remote images; JavaScript does not allow these to be used to generate an image.")
 		}
@@ -6031,11 +6031,19 @@ var Label = Class.create(
 })
 
 var Coastline = {
+	initialize: function() {
+
+
+		$('canvas').observe('cartagen:predraw', Coastline.draw.bindAsEventListener(this))
+	},
 	coastlines: [],
 	coastline_nodes: [],
+	assembled_coastline: [],
 	draw: function() {
+		$l('draw me!!!')
 		Coastline.assembled_coastline = []
 		Feature.relations.values().each(function(object) {
+			$l(this.id+' relation')
 			object.collect_nodes()
 			if (object.coastline_nodes.length > 0) Coastline.assembled_coastline.push([object.coastline_nodes,[object.entry_angle,object.exit_angle]])
 		})
@@ -6196,6 +6204,8 @@ var Coastline = {
 	},
 	sort_coastlines_by_angle: function(a,b) { return (a[1][0] - b[1][0]) }
 }
+
+document.observe('cartagen:init', Coastline.initialize.bindAsEventListener(Coastline))
 var Importer = {
 	plot_array: [],
 	requested_plots: 0,
@@ -7525,6 +7535,9 @@ var Interface = {
 	display_loading: function(percent) {
 		if (percent < 100) {
 			$C.save()
+	        $C.translate(Map.x,Map.y)
+			$C.rotate(-Map.rotate)
+	        $C.translate(-Map.x,-Map.y)
 			$C.fill_style('white')
 			$C.line_width(0)
 			$C.opacity(0.7)
@@ -7550,6 +7563,9 @@ var Interface = {
 			             x-(width/(2*Map.zoom)),
 						 y+(6/Map.zoom),
 						 parseInt(percent)+"%")
+			$C.translate(Map.x,Map.y)
+			$C.rotate(Map.rotate)
+	        $C.translate(-Map.x,-Map.y)
 			$C.restore()
 		}
 	},

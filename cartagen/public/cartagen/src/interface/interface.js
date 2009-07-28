@@ -11,6 +11,9 @@ var Interface = {
 		if (percent < 100) {
 			// $l('bar')
 			$C.save()
+	        $C.translate(Map.x,Map.y)
+			$C.rotate(-Map.rotate)
+	        $C.translate(-Map.x,-Map.y)
 			$C.fill_style('white')
 			$C.line_width(0)
 			$C.opacity(0.7)
@@ -35,7 +38,10 @@ var Interface = {
 						 "#333",
 			             x-(width/(2*Map.zoom)),
 						 y+(6/Map.zoom),
-						 parseInt(percent)+"%")
+						 parseInt(percent)+"%")	
+			$C.translate(Map.x,Map.y)
+			$C.rotate(Map.rotate)
+	        $C.translate(-Map.x,-Map.y)
 			$C.restore()
 		}
 	},
