@@ -114,7 +114,7 @@ var Glop = {
 	 */
 	draw_powersave: function() {
 		var delay = 20
-		if (this.tail > 0 || Config.powersave == false || (Cartagen.requested_plots && Cartagen.requested_plots > 0) || Cartagen.last_loaded_geohash_frame > Glop.frame-delay || Cartagen.parse_manager.completed < 100) {
+		if (this.tail > 0 || Config.powersave == false || (Importer.requested_plots && Importer.requested_plots > 0) || Cartagen.last_loaded_geohash_frame > Glop.frame-delay || Importer.parse_manager.completed < 100) {
 			if (this.tail > 0) this.tail -= 1
 			Glop.draw()
 		} //else $l('powersave: '+this.tail)

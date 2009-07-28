@@ -92,7 +92,7 @@ var User = {
 	 * data. Bound to cartagen:postinit
 	 */
 	init: function() {
-		if (Cartagen.load_user_features) {
+		if (Config.load_user_features) {
 			User.update()
 			new PeriodicalExecuter(User.update, 60)
 		}
@@ -332,7 +332,7 @@ var User = {
 	 * Updates the map with other users' nodes and ways
 	 */
 	update: function() {
-		if (!Cartagen.load_user_features) return
+		if (!Config.load_user_features) return
 		var params = {
 			bbox: Map.bbox.join(',')
 		}

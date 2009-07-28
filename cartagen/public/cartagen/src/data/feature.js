@@ -113,7 +113,7 @@ Object.extend(Feature, {
 	 * Hash of relation id => relation
 	 * @type Relation
 	 */
-	relations: new Hash(),
+	relations: new Hash()
 })
 
 //= require "types/node"

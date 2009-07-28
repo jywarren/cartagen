@@ -4979,12 +4979,9 @@ if (typeof cartagen_base_uri == 'undefined') {
 
 
 var Cartagen = {
-	requested_plots: 0,
-	plots: new Hash(),
 	label_queue: [],
 	feature_queue: [],
 	scripts: [],
-	parse_manager: null,
 	setup: function(configs) {
 		$(document).observe('dom:loaded', function() {
 			Cartagen.initialize(configs)
@@ -5005,8 +5002,6 @@ var Cartagen = {
 		this.browser_check()
 
 
-		Cartagen.parse_manager = new TaskManager(50)
-
 		document.fire('cartagen:init')
 
 		$('canvas').observe('glop:draw', Cartagen.draw.bindAsEventListener(this))
@@ -5015,13 +5010,13 @@ var Cartagen = {
 		Style.load_styles(Config.stylesheet) // stylesheet
 
 		if (!Config.static_map) {
-			this.get_current_plot(true)
+			Importer.get_current_plot(true)
 			new PeriodicalExecuter(Glop.trigger_draw,3)
-			new PeriodicalExecuter(function() { Cartagen.get_current_plot(false) },3)
+			new PeriodicalExecuter(function() { Importer.get_current_plot(false) },3)
 		} else {
 			Config.static_map_layers.each(function(layer_url) {
 				$l('fetching '+layer_url)
-				this.get_static_plot(layer_url)
+				Importer.get_static_plot(layer_url)
 			},this)
 			if (Config.dynamic_layers.length > 0) {
 				Config.dynamic_layers.each(function(layer_url) {
@@ -5053,7 +5048,6 @@ var Cartagen = {
 
 		Viewport.draw() //adjust viewport
 
-
 		$('canvas').fire('cartagen:predraw')
 
 		Geohash.objects.each(function(object) {
@@ -5083,7 +5077,7 @@ var Cartagen = {
 
 		$('canvas').fire('cartagen:postdraw')
 
-		Interface.display_loading(Cartagen.parse_manager.completed)
+		Interface.display_loading(Importer.parse_manager.completed)
 
     },
     queue_label: function(label, x, y) {
@@ -5097,196 +5091,12 @@ var Cartagen = {
 			if (Prototype.Browser.IE) $('browsers').show();
 		}
 	},
-	get_url_param: function(name) {
-		name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-		var regexS = "[\\?&]"+name+"=([^&#]*)";
-		var regex = new RegExp( regexS );
-		var results = regex.exec( window.location.href );
-		if( results == null )    return "";
-		else return results[1];
-	},
-	sort_by_area: function(a,b) {
-		if (a instanceof Way) {
-			if (b instanceof Way) {
-				if ( a.area < b.area )
-			    return 1;
-			  if ( a.area > b.area )
-			    return -1;
-			  return 0; // a == b
-			} else {
-				return -1 // a wins no matter what if b is not a Way
-			}
-		} else {
-			return 1 // b wins no matter what if a is not a Way
-		}
-	},
 	go_to: function(lat,lon,zoom_level) {
-		Cartagen.zoom_level = zoom_level
+		Mpa.zoom = zoom_level
 		Map.lat = lat
 		Map.lon = lon
 		Map.x = Projection.lon_to_x(Map.lon)
 		Map.y = Projection.lat_to_y(Map.lat)
-	},
-	parse_node: function(node){
-		var n = new Node
-		n.name = node.name
-		n.author = n.author
-		n.img = n.img
-		n.h = 10
-		n.w = 10
-		n.color = Glop.random_color()
-		n.timestamp = node.timestamp
-		n.user = node.user
-		n.id = node.id
-		n.lat = node.lat
-		n.lon = node.lon
-		n.x = Projection.lon_to_x(n.lon)
-		n.y = Projection.lat_to_y(n.lat)
-		Style.parse_styles(n,Style.styles.node)
-		Feature.nodes.set(n.id,n)
-		if (node.display) {
-			n.display = true
-			n.radius = 50
-			Geohash.put(n.lat, n.lon, n, 1)
-		}
-	},
-	parse_way: function(way){
-		if (Config.live || !Feature.ways.get(way.id)) {
-			var data = {
-				id: way.id,
-				user: way.user,
-				timestamp: way.timestamp,
-				nodes: [],
-				tags: new Hash()
-			}
-			if (way.name) data.name = way.name
-			way.nd.each(function(nd, index) {
-				if ((index % Config.simplify) == 0 || index == 0 || index == way.nd.length-1 || way.nd.length <= Config.simplify*2)  {
-					node = Feature.nodes.get(nd.ref)
-					if (!Object.isUndefined(node)) data.nodes.push(node)
-				}
-			})
-			if (way.tag instanceof Array) {
-				way.tag.each(function(tag) {
-					data.tags.set(tag.k,tag.v)
-					if (tag.v == 'coastline') data.coastline = true
-				})
-			} else {
-				data.tags.set(way.tag.k,way.tag.v)
-				if (tag.v == 'coastline') data.coastline = true
-			}
-			new Way(data)
-		}
-	},
-	parse_objects: function(data, key) {
-
-		var cond;
-		if (key) {
-			cond = function() {
-				return (Geohash.keys.get(key) === true)
-			}
-		}
-		else  {
-			cond = true
-		}
-
-		node_task = new Task(data.osm.node, Cartagen.parse_node, cond)
-		way_task = new Task(data.osm.way, Cartagen.parse_way, cond, [node_task.id])
-		coastline_task = new Task(['placeholder'], Coastline.refresh_coastlines, cond, [way_task.id])
-		Cartagen.parse_manager.add(node_task)
-		Cartagen.parse_manager.add(way_task)
-		Cartagen.parse_manager.add(coastline_task)
-
-
-	},
-	plot_array: [],
-	get_current_plot: function(force) {
-		force = force || false
-		if ((Map.x != Map.last_pos[0] && Map.y != Map.last_pos[1]) || force != false || Glop.frame < 100) {
-			if (Geohash.keys && Geohash.keys.keys()) {
-				try {
-				Geohash.keys.keys().each(function(key) {
-					if (key.length == 6) Cartagen.get_cached_plot(key)
-				})
-				} catch(e) {
-					$l(e)
-				}
-			}
-		}
-		Map.last_pos[0] = Map.x
-		Map.last_pos[1] = Map.y
-	},
-	get_static_plot: function(url) {
-		$l('fetching ' + url)
-		Cartagen.requested_plots++
-		new Ajax.Request(url,{
-			method: 'get',
-			onComplete: function(result) {
-				Cartagen.parse_objects(result.responseText.evalJSON())
-				Cartagen.requested_plots--
-				if (Cartagen.requested_plots == 0) Event.last_event = Glop.frame
-				$l("Total plots: "+Cartagen.plots.size()+", of which "+Cartagen.requested_plots+" are still loading.")
-			}
-		})
-	},
-	get_cached_plot: function(key) {
-
-		if (!Config.live) {
-			if (Cartagen.plots.get(key)) {
-			} else {
-				if (typeof localStorage != "undefined") {
-					var ls = localStorage.getItem('geohash_'+key)
-					if (ls) {
-						$l("localStorage cached plot")
-						Cartagen.parse_objects(ls.evalJSON(), key)
-					} else {
-						Cartagen.load_plot(key)
-					}
-				} else {
-					Cartagen.load_plot(key)
-				}
-			}
-		} else {
-			Cartagen.load_plot(key)
-		}
-
-		Cartagen.plots.set(key, true)
-	},
-	delayed_get_cached_plot: function(_lat1,_lng1,_lat2,_lng2,_bleed) {
-		bleed_delay = 1000+(2000*Math.random(_lat1+_lng1)) //milliseconds, with a random factor to stagger requests
-		setTimeout("Cartagen.get_cached_plot("+_lat1+","+_lng1+","+_lat2+","+_lng2+","+_bleed+")",bleed_delay)
-	},
-	load_plot: function(key) {
-		$l('loading geohash plot: '+key)
-
-		Cartagen.requested_plots++
-		var finished = false
-		var req = new Ajax.Request('/api/0.6/geohash/'+key+'.json',{
-			method: 'get',
-			onSuccess: function(result) {
-				finished = true
-				Cartagen.parse_objects(result.responseText.evalJSON(), key)
-				if (localStorage) localStorage.setItem('geohash_'+key,result.responseText)
-				Cartagen.requested_plots--
-				if (Cartagen.requested_plots == 0) Event.last_event = Glop.frame
-				$l("Total plots: "+Cartagen.plots.size()+", of which "+Cartagen.requested_plots+" are still loading.")
-				Geohash.last_get_objects[3] = true // force re-get of geohashes
-				Glop.trigger_draw()
-			},
-			onFailure: function() {
-				Cartagen.requested_plots--
-			}
-		})
-
-		var f = function(){
-			if (!finished) {
-				Cartagen.plots.set(key, false)
-				req.transport.onreadystatechange = Prototype.emptyFunction
-				req.transport.abort()
-				$l("Request aborted. Total plots: "+Cartagen.plots.size()+", of which "+Cartagen.requested_plots+" are still loading.")
-			}
-		}
-		f.delay(120)
 	},
 	highlight: function(query) {
 		Geohash.objects.each(function(object) {
@@ -5459,6 +5269,21 @@ var Geometry = {
 	},
 	distance: function(x,y,x2,y2) {
 		return Math.sqrt(Math.abs(x-x2)*Math.abs(x-x2)+Math.abs(y-y2)*Math.abs(y-y2))
+	},
+	sort_by_area: function(a,b) {
+		if (a instanceof Way) {
+			if (b instanceof Way) {
+				if ( a.area < b.area )
+			    return 1;
+			  if ( a.area > b.area )
+			    return -1;
+			  return 0; // a == b
+			} else {
+				return -1 // a wins no matter what if b is not a Way
+			}
+		} else {
+			return 1 // b wins no matter what if a is not a Way
+		}
 	}
 }
 $D = {
@@ -5821,7 +5646,7 @@ var Feature = Class.create(
 Object.extend(Feature, {
 	nodes: new Hash(),
 	ways: new Hash(),
-	relations: new Hash(),
+	relations: new Hash()
 })
 
 var Node = Class.create(Feature,
@@ -5891,7 +5716,7 @@ var Way = Class.create(Feature,
 
 		Feature.ways.set(this.id,this)
 		if (this.coastline) {
-			Cartagen.coastlines.push(this)
+			Coastline.coastlines.push(this)
 		} else {
 			Style.parse_styles(this,Style.styles.way)
 			Geohash.put_object(this)
@@ -6001,13 +5826,13 @@ var Way = Class.create(Feature,
 		}
 
 		$C.begin_path()
-		if (Cartagen.distort) $C.move_to(this.nodes[0].x,this.nodes[0].y+Math.max(0,75-Geometry.distance(this.nodes[0].x,this.nodes[0].y,Map.pointer_x(),Map.pointer_y())/4))
+		if (Config.distort) $C.move_to(this.nodes[0].x,this.nodes[0].y+Math.max(0,75-Geometry.distance(this.nodes[0].x,this.nodes[0].y,Map.pointer_x(),Map.pointer_y())/4))
 		else $C.move_to(this.nodes[0].x,this.nodes[0].y)
 
 		if (Map.resolution == 0) Map.resolution = 1
 		this.nodes.each(function(node,index){
 			if ((index % Map.resolution == 0) || index == this.nodes.length-1 || this.nodes.length <= 30) {
-				if (Cartagen.distort) $C.line_to(node.x,node.y+Math.max(0,75-Geometry.distance(node.x,node.y,Map.pointer_x(),Map.pointer_y())/4))
+				if (Config.distort) $C.line_to(node.x,node.y+Math.max(0,75-Geometry.distance(node.x,node.y,Map.pointer_x(),Map.pointer_y())/4))
 				else $C.line_to(node.x,node.y)
 			}
 		},this)
@@ -6371,6 +6196,172 @@ var Coastline = {
 	},
 	sort_coastlines_by_angle: function(a,b) { return (a[1][0] - b[1][0]) }
 }
+var Importer = {
+	plot_array: [],
+	requested_plots: 0,
+	plots: new Hash(),
+	parse_manager: null,
+	init: function() {
+		Importer.parse_manager = new TaskManager(50)
+	},
+	get_current_plot: function(force) {
+		force = force || false
+		if ((Map.x != Map.last_pos[0] && Map.y != Map.last_pos[1]) || force != false || Glop.frame < 100) {
+			if (Geohash.keys && Geohash.keys.keys()) {
+				try {
+				Geohash.keys.keys().each(function(key) {
+					if (key.length == 6) Importer.get_cached_plot(key)
+				})
+				} catch(e) {
+					$l(e)
+				}
+			}
+		}
+		Map.last_pos[0] = Map.x
+		Map.last_pos[1] = Map.y
+	},
+	get_static_plot: function(url) {
+		$l('fetching ' + url)
+		Importer.requested_plots++
+		new Ajax.Request(url,{
+			method: 'get',
+			onComplete: function(result) {
+				Importer.parse_objects(result.responseText.evalJSON())
+				Importer.requested_plots--
+				if (Importer.requested_plots == 0) Event.last_event = Glop.frame
+				$l("Total plots: "+Importer.plots.size()+", of which "+Importer.requested_plots+" are still loading.")
+			}
+		})
+	},
+	get_cached_plot: function(key) {
+
+		if (!Config.live) {
+			if (Importer.plots.get(key)) {
+			} else {
+				if (typeof localStorage != "undefined") {
+					var ls = localStorage.getItem('geohash_'+key)
+					if (ls) {
+						$l("localStorage cached plot")
+						Importer.parse_objects(ls.evalJSON(), key)
+					} else {
+						Importer.load_plot(key)
+					}
+				} else {
+					Importer.load_plot(key)
+				}
+			}
+		} else {
+			Importer.load_plot(key)
+		}
+
+		Importer.plots.set(key, true)
+	},
+	load_plot: function(key) {
+		$l('loading geohash plot: '+key)
+
+		Importer.requested_plots++
+		var finished = false
+		var req = new Ajax.Request('/api/0.6/geohash/'+key+'.json',{
+			method: 'get',
+			onSuccess: function(result) {
+				finished = true
+				Importer.parse_objects(result.responseText.evalJSON(), key)
+				if (localStorage) localStorage.setItem('geohash_'+key,result.responseText)
+				Importer.requested_plots--
+				if (Importer.requested_plots == 0) Event.last_event = Glop.frame
+				$l("Total plots: "+Importer.plots.size()+", of which "+Importer.requested_plots+" are still loading.")
+				Geohash.last_get_objects[3] = true // force re-get of geohashes
+				Glop.trigger_draw()
+			},
+			onFailure: function() {
+				Importer.requested_plots--
+			}
+		})
+
+		var f = function(){
+			if (!finished) {
+				Importer.plots.set(key, false)
+				req.transport.onreadystatechange = Prototype.emptyFunction
+				req.transport.abort()
+				$l("Request aborted. Total plots: "+Importer.plots.size()+", of which "+Importer.requested_plots+" are still loading.")
+			}
+		}
+		f.delay(120)
+	},
+	parse_node: function(node){
+		var n = new Node
+		n.name = node.name
+		n.author = n.author
+		n.img = n.img
+		n.h = 10
+		n.w = 10
+		n.color = Glop.random_color()
+		n.timestamp = node.timestamp
+		n.user = node.user
+		n.id = node.id
+		n.lat = node.lat
+		n.lon = node.lon
+		n.x = Projection.lon_to_x(n.lon)
+		n.y = Projection.lat_to_y(n.lat)
+		Style.parse_styles(n,Style.styles.node)
+		Feature.nodes.set(n.id,n)
+		if (node.display) {
+			n.display = true
+			n.radius = 50
+			Geohash.put(n.lat, n.lon, n, 1)
+		}
+	},
+	parse_way: function(way){
+		if (Config.live || !Feature.ways.get(way.id)) {
+			var data = {
+				id: way.id,
+				user: way.user,
+				timestamp: way.timestamp,
+				nodes: [],
+				tags: new Hash()
+			}
+			if (way.name) data.name = way.name
+			way.nd.each(function(nd, index) {
+				if ((index % Config.simplify) == 0 || index == 0 || index == way.nd.length-1 || way.nd.length <= Config.simplify*2)  {
+					node = Feature.nodes.get(nd.ref)
+					if (!Object.isUndefined(node)) data.nodes.push(node)
+				}
+			})
+			if (way.tag instanceof Array) {
+				way.tag.each(function(tag) {
+					data.tags.set(tag.k,tag.v)
+					if (tag.v == 'coastline') data.coastline = true
+				})
+			} else {
+				data.tags.set(way.tag.k,way.tag.v)
+				if (tag.v == 'coastline') data.coastline = true
+			}
+			new Way(data)
+		}
+	},
+	parse_objects: function(data, key) {
+
+		var cond;
+		if (key) {
+			cond = function() {
+				return (Geohash.keys.get(key) === true)
+			}
+		}
+		else  {
+			cond = true
+		}
+
+		node_task = new Task(data.osm.node, Importer.parse_node, cond)
+		way_task = new Task(data.osm.way, Importer.parse_way, cond, [node_task.id])
+		coastline_task = new Task(['placeholder'], Coastline.refresh_coastlines, cond, [way_task.id])
+		Importer.parse_manager.add(node_task)
+		Importer.parse_manager.add(way_task)
+		Importer.parse_manager.add(coastline_task)
+
+	}
+}
+
+document.observe('cartagen:init', Importer.init.bindAsEventListener(Importer))
 var Glop = {
 	frame: 0,
 	date: new Date,
@@ -6419,7 +6410,7 @@ var Glop = {
 	},
 	draw_powersave: function() {
 		var delay = 20
-		if (this.tail > 0 || Config.powersave == false || (Cartagen.requested_plots && Cartagen.requested_plots > 0) || Cartagen.last_loaded_geohash_frame > Glop.frame-delay || Cartagen.parse_manager.completed < 100) {
+		if (this.tail > 0 || Config.powersave == false || (Importer.requested_plots && Importer.requested_plots > 0) || Cartagen.last_loaded_geohash_frame > Glop.frame-delay || Importer.parse_manager.completed < 100) {
 			if (this.tail > 0) this.tail -= 1
 			Glop.draw()
 		} //else $l('powersave: '+this.tail)
@@ -6540,7 +6531,7 @@ var Task = Class.create(
 
 	visible: false,
 	display: function() {
-		if (this.visible || Cartagen.debug) {
+		if (this.visible || Config.debug) {
 		}
 	}
 })
@@ -7216,7 +7207,7 @@ var User = {
 	drawing_way: false,
 	loaded_node_ids: [],
 	init: function() {
-		if (Cartagen.load_user_features) {
+		if (Config.load_user_features) {
 			User.update()
 			new PeriodicalExecuter(User.update, 60)
 		}
@@ -7390,7 +7381,7 @@ var User = {
 		Glop.trigger_draw()
 	},
 	update: function() {
-		if (!Cartagen.load_user_features) return
+		if (!Config.load_user_features) return
 		var params = {
 			bbox: Map.bbox.join(',')
 		}
@@ -7899,7 +7890,7 @@ Object.extend(Geohash, {
 		return this.objects
 	},
 	sort_objects: function() {
-		this.objects.sort(Cartagen.sort_by_area)
+		this.objects.sort(Geometry.sort_by_area)
 	},
 	feature_density: function() {
 		return 2 * Viewport.power()
