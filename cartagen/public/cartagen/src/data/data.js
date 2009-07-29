@@ -199,6 +199,8 @@ Object.extend(Data, {
 		keys.each(function(k) {
 			features = features.concat(this.get_current_features_by_key(k))
 		}, this)
+		
+		return features
 	}, 
 	/**
 	 * Prints debugging information to the console
