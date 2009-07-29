@@ -6484,7 +6484,7 @@ Object.extend(Data, {
 			frame: Glop.frame
 		}
 
-		this.features = []
+		this.current_features = []
 
 		this.current_keys = new Hash
 

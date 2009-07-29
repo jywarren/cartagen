@@ -237,7 +237,7 @@ Object.extend(Data, {
 			frame: Glop.frame
 		}
 		
-		this.features = []
+		this.current_features = []
 
 		// get geohash for each of the 4 corners,
 		this.current_keys = new Hash
