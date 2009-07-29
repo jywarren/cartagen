@@ -77,7 +77,7 @@ var Way = Class.create(Feature,
 			Coastline.coastlines.push(this)
 		} else {
 			Style.parse_styles(this,Style.styles.way)
-			Geohash.put_object(this)
+			Data.put_object(this)
 		}
     },
 	/**

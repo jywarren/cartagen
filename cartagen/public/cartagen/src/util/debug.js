@@ -104,16 +104,16 @@ $D = {
 	},
 	
 	way_count: function() {
-		return Geohash.objects.findAll(function(o){return o.get_type() == 'Way'}).length
+		return Data.current_features.findAll(function(o){return o.get_type() == 'Way'}).length
 	},
 	
 	relation_count: function() {
-		return Geohash.objects.findAll(function(o){return o.get_type() == 'Relation'}).length
+		return Data.current_features.findAll(function(o){return o.get_type() == 'Relation'}).length
 	},
 	
 	node_count: function() {
 		var c = 0
-		Geohash.objects.each(function(o) {
+		Geohash.current_features.each(function(o) {
 			c += o.nodes.length
 		})
 		return c

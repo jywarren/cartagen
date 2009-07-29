@@ -171,7 +171,7 @@ var Style = {
 		}
 		
 		if (force_update) {
-			Geohash.each(function(o) {
+			Data.each(function(o) {
 				o.refresh_styles()
 			})
 		}

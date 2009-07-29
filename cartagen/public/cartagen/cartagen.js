@@ -5050,19 +5050,19 @@ var Cartagen = {
 
 		$('canvas').fire('cartagen:predraw')
 
-		Geohash.objects.each(function(object) {
-			if (object.user_submitted) {
-				Cartagen.feature_queue.push(object)
+		Data.current_features.each(function(feature) {
+			if (feature.user_submitted) {
+				Cartagen.feature_queue.push(feature)
 			}
 			else {
 				try {
-				object.draw()
+					feature.draw()
 				} catch(e) {$l(e)}
 			}
 		})
 
-		this.feature_queue.each(function(item) {
-			(item.draw.bind(item))()
+		this.feature_queue.each(function(feature) {
+			(feature.draw.bind(item))()
 		})
 		this.feature_queue = []
 
@@ -5349,16 +5349,16 @@ $D = {
 	},
 
 	way_count: function() {
-		return Geohash.objects.findAll(function(o){return o.get_type() == 'Way'}).length
+		return Data.current_features.findAll(function(o){return o.get_type() == 'Way'}).length
 	},
 
 	relation_count: function() {
-		return Geohash.objects.findAll(function(o){return o.get_type() == 'Relation'}).length
+		return Data.current_features.findAll(function(o){return o.get_type() == 'Relation'}).length
 	},
 
 	node_count: function() {
 		var c = 0
-		Geohash.objects.each(function(o) {
+		Geohash.current_features.each(function(o) {
 			c += o.nodes.length
 		})
 		return c
@@ -5565,7 +5565,7 @@ var Style = {
 		}
 
 		if (force_update) {
-			Geohash.each(function(o) {
+			Data.each(function(o) {
 				o.refresh_styles()
 			})
 		}
@@ -5719,7 +5719,7 @@ var Way = Class.create(Feature,
 			Coastline.coastlines.push(this)
 		} else {
 			Style.parse_styles(this,Style.styles.way)
-			Geohash.put_object(this)
+			Data.put_object(this)
 		}
     },
 	neighbors: [false,false],
@@ -6217,9 +6217,9 @@ var Importer = {
 	get_current_plot: function(force) {
 		force = force || false
 		if ((Map.x != Map.last_pos[0] && Map.y != Map.last_pos[1]) || force != false || Glop.frame < 100) {
-			if (Geohash.keys && Geohash.keys.keys()) {
+			if (Data.current_keys && Data.current_keys.keys()) {
 				try {
-				Geohash.keys.keys().each(function(key) {
+				Data.current_keys.keys().each(function(key) {
 					if (key.length == 6) Importer.get_cached_plot(key)
 				})
 				} catch(e) {
@@ -6280,7 +6280,7 @@ var Importer = {
 				Importer.requested_plots--
 				if (Importer.requested_plots == 0) Event.last_event = Glop.frame
 				$l("Total plots: "+Importer.plots.size()+", of which "+Importer.requested_plots+" are still loading.")
-				Geohash.last_get_objects[3] = true // force re-get of geohashes
+				Data.force_get_features = true // force re-get of geohashes
 				Glop.trigger_draw()
 			},
 			onFailure: function() {
@@ -6318,7 +6318,7 @@ var Importer = {
 		if (node.display) {
 			n.display = true
 			n.radius = 50
-			Geohash.put(n.lat, n.lon, n, 1)
+			Data.put(n.lat, n.lon, n, 1)
 		}
 	},
 	parse_way: function(way){
@@ -6354,7 +6354,7 @@ var Importer = {
 		var cond;
 		if (key) {
 			cond = function() {
-				return (Geohash.keys.get(key) === true)
+				return (Data.current_keys.get(key) === true)
 			}
 		}
 		else  {
@@ -6372,6 +6372,155 @@ var Importer = {
 }
 
 document.observe('cartagen:init', Importer.init.bindAsEventListener(Importer))
+
+var Data = {}
+
+Object.extend(Data, Enumerable)
+
+Object.extend(Data, {
+	nodes: new Hash(),
+	ways: new Hash(),
+	relations: new Hash(),
+	geohash_index: new Hash(),
+	current_features: [],
+	current_geohash_index: new Hash(),
+	current_keys: new Hash,
+	current_key_length: 0,
+	current_central_key: '',
+	last_get_features: {
+		x: 0,
+		y: 0,
+		zoom: 0,
+		frame: 0
+	},
+	force_get_features: false,
+	last_loaded_geohash_frame: 0,
+	init: function() {
+		$('canvas').observe('cartagen:predraw', this.draw.bindAsEventListener(this))
+	},
+	draw: function() {
+		if (this.should_draw()) {
+			this.get_features()
+			this.force_get_features = false
+		}
+	},
+	should_draw: function() {
+		return (
+			this.force_get_features ||
+			this.features.length == 0 ||
+			Map.zoom / this.last_get_features.zoom > 1.1 ||
+			Map.zoom / this.last_get_features.zoom < 0.9 ||
+			Math.abs(this.last_get_features.x - Map.x) > 100 ||
+			Math.abs(this.last_get_features.y - Map.y) > 100
+		)
+	},
+	put: function(lat, lon, feature, length) {
+		length = length || this.default_length
+		var key = Geohash.get_key(lat, lon, length)
+
+		var merge_hash = this.geohash_index.get(key)
+		if (!merge_hash) {
+			merge_hash = [feature]
+		} else {
+			merge_hash.push(feature)
+		}
+
+		this.geohash_index.set(key,merge_hash)
+	},
+	put_object: function(feature) {
+		this.put(Projection.y_to_lat(feature.y),
+		         Projection.x_to_lon(-feature.x),
+		         feature,
+		         Geohash.get_key_length(feature.width,feature.height))
+	},
+	get_features_by_key: function(key) {
+		return this.geohash_index.get(key) || []
+	},
+	get_current_features_by_key: function(key) {
+		return this.current_geohash_index.get(key) || []
+	},
+	get_features_upward: function(key) {
+		key.truncate(this.limit_bottom,'')
+
+		var keys = Geohash.get_keys_upward(key).keys()
+		var features = []
+
+		keys.each(function(k) {
+			features = features.concat(this.get_features_by_key(k))
+		}, this)
+	},
+	get_current_features_upward: function(key) {
+		key.truncate(this.limit_bottom,'')
+
+		var keys = Geohash.get_keys_upward(key).keys()
+		var features = []
+
+		keys.each(function(k) {
+			features = features.concat(this.get_current_features_by_key(k))
+		}, this)
+	},
+	trace: function() {
+		var lengths = new Hash
+		this.geohash_index.keys().each(function(key) {
+			$l(key+': '+this.get_features_by_key(key).length)
+
+			if (!lengths.get(key.length)) lengths.set(key.length,0)
+			lengths.set(key.length,lengths.get(key.length)+1)
+		}, this)
+
+		$l('Lengths >>')
+
+		lengths.keys().sort().each(function(length) {
+			$l(length+": "+lengths.get(length))
+		})
+
+		return this.geohash_index.size()
+	},
+	get_features: function() {
+		this.last_get_features = {
+			x: Map.x,
+			y: Map.y,
+			zoom: Map.zoom,
+			frame: Glop.frame
+		}
+
+		this.features = []
+
+		this.current_keys = new Hash
+
+		this.current_key_length = Geohash.get_key_length(0.0015 / Map.zoom, 0.0015 / Map.zoom)
+
+		this.current_central_key = Geohash.get_key(Map.lat, Map.lon, this.current_key_length)
+
+		var bbox = decodeGeoHash(this.current_central_key) //[lon1, lat2, lon2, lat1]
+
+		Geohash.fill_bbox(this.current_central_key, this.current_keys)
+
+		this.current_keys.keys().each(function(key, index) {
+			this.current_keys = Geohash.get_keys_upward(key, this.current_keys)
+		}, this)
+
+		var features
+		this.current_keys.keys().each(function(key) {
+			features = this.get_features_by_key(key)
+			this.current_geohash_index.set(key, features)
+			this.current_features = features.concat(this.current_features)
+		}, this)
+
+		this.sort_objects()
+		return this.current_features
+	},
+	sort_objects: function() {
+		this.current_features.sort(Geometry.sort_by_area)
+	},
+	_each: function(f) {
+		this.hash.each(function(pair) {
+			pair.value.each(function(val) { f(val) })
+		})
+	}
+})
+
+document.observe('cartagen:init', Data.init.bindAsEventListener(Data))
 var Glop = {
 	frame: 0,
 	date: new Date,
@@ -6468,7 +6617,7 @@ var TaskManager = Class.create(
 
 		this.get_completed(cur_tasks)
 
-		Geohash.get_objects()
+		Data.get_features()
 		Glop.trigger_draw()
 
 		if (this.tasks.length < 1) this.stop()
@@ -6672,7 +6821,7 @@ var Events = {
 		Mouse.y = -1*Event.pointerY(event)
 		var lon = Projection.x_to_lon(-1*Map.pointer_x())
 		var lat = Projection.y_to_lat(Map.pointer_y())
-		var features = Geohash.get_current_features_upward(encodeGeoHash(lat, lon))
+		var features = Data.get_current_features_upward(encodeGeoHash(lat, lon))
 		if (features) features.reverse().concat(Mouse.hovered_features).invoke('style')
 		Glop.trigger_draw(5)
 	},
@@ -6749,14 +6898,12 @@ var Events = {
 			}
 		}
 		Glop.trigger_draw(5)
-		e.preventDefault()
 	},
 	keyup: function(e) {
 		if (Events.enabled === false) return
 
 		Keyboard.keys.set("r",false)
 		Keyboard.keys.set("z",false)
-		e.preventDefault()
 	},
 	ontouchstart: function(e){
 		e.preventDefault();
@@ -7260,7 +7407,7 @@ var User = {
 		node.user_submitted = true
 
 		if (draw) {
-			Geohash.put(node.lat, node.lon, node, 1)
+			Data.put(node.lat, node.lon, node, 1)
 			objects.push(node)
         	Glop.trigger_draw()
 		}
@@ -7354,7 +7501,7 @@ var User = {
 			User.way.lineWidth = User.line_width
 			User.way.age = 40
 			User.way.user_submitted = true
-			Geohash.put(Projection.y_to_lat(User.way.y), Projection.x_to_lon(User.way.x), User.way, 1)
+			Data.put(Projection.y_to_lat(User.way.y), Projection.x_to_lon(User.way.x), User.way, 1)
 			Glop.trigger_draw()
 		}
 		User.drawing_way = !User.drawing_way
@@ -7434,7 +7581,7 @@ var User = {
 					n.y = Projection.lat_to_y(n.lat)
 					n.strokeStyle = "rgba(0,0,0,0)"
 					n.user_submitted = true
-					Geohash.put(n.lat, n.lon, n, 1)
+					Data.put(n.lat, n.lon, n, 1)
 				}
 			}
 		})
@@ -7656,45 +7803,12 @@ var Geohash = {}
 Object.extend(Geohash, Enumerable)
 
 Object.extend(Geohash, {
-	_dirs: ['top','bottom','left','right'],
-	hash: new Hash(),
-	objects: [],
-	object_hash: new Hash(),
 	grid: false,
 	grid_color: 'black',
 	default_length: 6, // default length of geohash
 	limit_bottom: 8, // 12 is most ever...
-	last_get_objects: [0,0,0,false],
-	last_loaded_geohash_frame: 0,
 	init: function() {
-		$('canvas').observe('cartagen:predraw', this.draw.bindAsEventListener(this))
 		$('canvas').observe('cartagen:postdraw', this.draw_bboxes.bindAsEventListener(this))
-	},
-	draw: function() {
-		if (this.last_get_objects[3] || Geohash.objects.length == 0 || Map.zoom/this.last_get_objects[2] > 1.1 || Map.zoom/this.last_get_objects[2] < 0.9 || Math.abs(this.last_get_objects[0] - Map.x) > 100 || Math.abs(this.last_get_objects[1] - Map.y) > 100) {
-			this.get_objects()
-			this.last_get_objects[3] = false
-			Cartagen.last_loaded_geohash_frame = Glop.frame
-		}
-	},
-	put: function(lat,lon,feature,length) {
-		if (!length) length = this.default_length
-		var key = this.get_key(lat,lon,length)
-
-		var merge_hash = this.hash.get(key)
-		if (!merge_hash) {
-			merge_hash = [feature]
-		} else {
-			merge_hash.push(feature)
-		}
-
-		this.hash.set(key,merge_hash)
-	},
-	put_object: function(feature) {
-		this.put(Projection.y_to_lat(feature.y),
-		         Projection.x_to_lon(-feature.x),
-		         feature,
-		         this.get_key_length(feature.width,feature.height))
 	},
 	get_key: function(lat,lon,length) {
 		if (!length) length = this.default_length
@@ -7702,74 +7816,36 @@ Object.extend(Geohash, {
 
 		return encodeGeoHash(lat,lon).truncate(length,'')
 	},
-	get: function(lat,lon,length) {
-		if (!length) length = this.default_length
+	get_keys_upward: function(key, hash) {
+		hash = hash || new Hash()
 
-		var key = this.get_key(lat,lon,length)
-		return this.hash.get(key)
-	},
-	get_from_key: function(key) {
-		return this.hash.get(key) || []
-	},
-	get_upward: function(key) {
-		key.truncate(this.limit_bottom,'')
+		hash.set(key, true)
 
-		var this_level = this.hash.get(key)
-
-		if (this_level && key.length > 0) {
-			if (key.length > 1) return this_level.concat(this.get_upward(key.truncate(key.length-1),''))
-			else return this_level
-		} else {
-			if (key.length > 1) return this.get_upward(key.truncate(key.length-1),'')
-			else return []
+		if (key.length > 1) {
+			return this.get_keys_upward(key.truncate(key.length-1, ''), hash)
 		}
+		else return hash
 	},
-	get_keys_upward: function(key) {
-		key.truncate(this.limit_bottom,'')
-
-		if (key.length > 0) {
-			this.keys.set(key, true)
-			k = key.truncate(key.length-1,'')
-			if (key.length > 1 && !Geohash.keys.get(k)) {
-				this.get_keys_upward(k)
-			}
-		}
-	},
-	get_current_features_upward: function(key) {
-		keys = []
-		for (var i=this.limit_bottom; i > 0; i--) {
-			keys.push(key.truncate(i, ''))
-		}
-		features =  []
-		keys.each(function(k) {
-			if (this.object_hash.get(k)) features = this.object_hash.get(k).concat(features)
-		}, this)
-		return features
-	},
-	get_all_neighbor_keys: function(key) {
+	get_four_neighbor_keys: function(key) {
 		var top = calculateAdjacent(key, 'top')
 		var bottom = calculateAdjacent(key, 'bottom')
 		var left = calculateAdjacent(key, 'left')
 		var right = calculateAdjacent(key, 'right')
+		return [top, right, bottom, left]
+	},
+	get_eight_neighbor_keys: function(key) {
+		var four = this.get_four_neighbor_keys(key)
+		var top = four[0], right = four[1], bottom = four[2], left = four[3]
 		var top_left = calculateAdjacent(top, 'left')
 		var top_right = calculateAdjacent(top, 'right')
 		var bottom_left = calculateAdjacent(bottom, 'left')
 		var bottom_right = calculateAdjacent(bottom, 'right')
 		return [top, top_right, right, bottom_right, bottom, bottom_left, left, top_left]
 	},
-	get_neighbors: function(key) {
-		var neighbors = []
+	fill_bbox: function(key, keys) {
+		keys = keys || new Hash()
 
-		this._dirs.each(function(dir) {
-			var n_key = calculateAdjacent(key, dir)
-			var n_array = this.get_from_key(n_key)
-			if (n_array) neighbors = neighbors.concat(n_array)
-		}, this)
-
-		return neighbors
-	},
-	fill_bbox: function(key,keys) {
-		this.get_all_neighbor_keys(key).each(function(k) {
+		this.get_eight_neighbor_keys(key).each(function(k) {
 			if (!keys.get(k)) {
 				keys.set(k, true)
 
@@ -7778,26 +7854,13 @@ Object.extend(Geohash, {
 					Math.in_range(bbox.latitude[1],Map.bbox[3],Map.bbox[1]) &&
 				    Math.in_range(bbox.longitude[0],Map.bbox[0],Map.bbox[2]) &&
 					Math.in_range(bbox.longitude[1],Map.bbox[0],Map.bbox[2])) {
+
 						this.fill_bbox(k,keys)
 				}
 			}
 		}, this)
-	},
-	trace: function() {
-		var lengths = new Hash
-		this.hash.keys().each(function(key) {
-			$l(key+': '+this.hash.get(key).length)
-			if (!lengths.get(key.length)) lengths.set(key.length,0)
-			lengths.set(key.length,lengths.get(key.length)+1)
-		}, this)
 
-		$l('Lengths >>')
-
-		lengths.keys().sort().each(function(length) {
-			$l(length+": "+lengths.get(length))
-		})
-
-		return this.hash.size()
+		return keys
 	},
 	bbox: function(geohash) {
 		var geo = decodeGeoHash(geohash)
@@ -7835,7 +7898,7 @@ Object.extend(Geohash, {
 	},
 	draw_bboxes: function() {
 		if (Geohash.grid) {
-			this.keys.keys().each(function(key){
+			Data.current_keys.keys().each(function(key){
 				Geohash.draw_bbox(key)
 			})
 		}
@@ -7871,57 +7934,7 @@ Object.extend(Geohash, {
 
 		return Math.min(lat_key,lon_key)
 	},
-	get_objects: function() {
-		this.last_get_objects = [Map.x,Map.y,Map.zoom]
-		this.objects = []
-
-		this.keys = new Hash
-
-		this.key_length = this.get_key_length(0.0015/Map.zoom, 0.0015/Map.zoom)
-
-		this.key = this.get_key(Map.lat, Map.lon, this.key_length)
-
-		var bbox = decodeGeoHash(this.key) //[lon1, lat2, lon2, lat1]
-
-		this.fill_bbox(this.key, this.keys)
-		this.get_keys_upward(this.key)
-
-		this.keys.keys().each(function(key, index) {
-			this.get_keys_upward(key)
-		}, this)
-
-
-
-
-
-		var features;
-		this.keys.keys().each(function(key) {
-				features = this.get_from_key(key)
-				this.object_hash.set(key, features)
-				this.objects = features.concat(this.objects)
-		}, this)
-
-		this.sort_objects()
-
-		return this.objects
-	},
-	sort_objects: function() {
-		this.objects.sort(Geometry.sort_by_area)
-	},
-	feature_density: function() {
-		return 2 * Viewport.power()
-	},
-	feature_quota: function() {
-		return ((Glop.width * Glop.height) * (Geohash.feature_density() / 1000)).round()
-	},
-	_each: function(f) {
-		this.hash.each(function(pair) {
-			pair.value.each(function(val) { f(val) })
-		})
-	}
 })
-
-
 
 document.observe('cartagen:init', Geohash.init.bindAsEventListener(Geohash))
 var Projection = {

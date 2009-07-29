@@ -82,7 +82,7 @@ var Relation = Class.create(Feature,
 		this.height = Math.abs(Projection.y_to_lat(this.bbox[0])-Projection.y_to_lat(this.bbox[2]))
 		
 		Style.parse_styles(this,Style.styles.relation)
-		// Geohash.put_object(this)
+		// Data.put_object(this)
 		Feature.relations.set('coastline_'+this.id,this)
     },
 	/**

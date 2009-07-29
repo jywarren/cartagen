@@ -27,9 +27,9 @@ var Importer = {
 		force = force || false
 		if ((Map.x != Map.last_pos[0] && Map.y != Map.last_pos[1]) || force != false || Glop.frame < 100) {
 			// find all geohashes we want to request:
-			if (Geohash.keys && Geohash.keys.keys()) {
+			if (Data.current_keys && Data.current_keys.keys()) {
 				try {
-				Geohash.keys.keys().each(function(key) {
+				Data.current_keys.keys().each(function(key) {
 					// this will look for cached plots, or get new ones if it fails to find cached ones
 					if (key.length == 6) Importer.get_cached_plot(key)
 				})
@@ -122,7 +122,7 @@ var Importer = {
 				Importer.requested_plots--
 				if (Importer.requested_plots == 0) Event.last_event = Glop.frame
 				$l("Total plots: "+Importer.plots.size()+", of which "+Importer.requested_plots+" are still loading.")
-				Geohash.last_get_objects[3] = true // force re-get of geohashes
+				Data.force_get_features = true // force re-get of geohashes
 				Glop.trigger_draw()
 			},
 			onFailure: function() {
@@ -165,7 +165,7 @@ var Importer = {
 		if (node.display) {
 			n.display = true
 			n.radius = 50
-			Geohash.put(n.lat, n.lon, n, 1)
+			Data.put(n.lat, n.lon, n, 1)
 		}
 	},
 	parse_way: function(way){
@@ -206,7 +206,7 @@ var Importer = {
 		var cond;
 		if (key) {
 			cond = function() {
-				return (Geohash.keys.get(key) === true)
+				return (Data.current_keys.get(key) === true)
 			}
 		}
 		else  {

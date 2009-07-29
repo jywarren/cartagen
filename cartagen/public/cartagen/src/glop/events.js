@@ -47,7 +47,7 @@ var Events = {
 		Mouse.y = -1*Event.pointerY(event)
 		var lon = Projection.x_to_lon(-1*Map.pointer_x())
 		var lat = Projection.y_to_lat(Map.pointer_y())
-		var features = Geohash.get_current_features_upward(encodeGeoHash(lat, lon))
+		var features = Data.get_current_features_upward(encodeGeoHash(lat, lon))
 		if (features) features.reverse().concat(Mouse.hovered_features).invoke('style')
 		Glop.trigger_draw(5)
 	},
@@ -141,7 +141,6 @@ var Events = {
 			}
 		}
 		Glop.trigger_draw(5)
-		e.preventDefault()
 	},
 	/**
 	 * Triggered when a key is released
@@ -151,7 +150,6 @@ var Events = {
 		
 		Keyboard.keys.set("r",false)
 		Keyboard.keys.set("z",false)
-		e.preventDefault()
 	},
 	/**
 	 * Triggered when a touch is started. Mainly for touchscreen mobile platforms

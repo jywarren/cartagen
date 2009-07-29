@@ -195,19 +195,19 @@ var Cartagen = {
 		$('canvas').fire('cartagen:predraw')
 		
 		//Geohash lookup:
-		Geohash.objects.each(function(object) {
-			if (object.user_submitted) {
-				Cartagen.feature_queue.push(object)
+		Data.current_features.each(function(feature) {
+			if (feature.user_submitted) {
+				Cartagen.feature_queue.push(feature)
 			}
 			else {
 				try {
-				object.draw()
+					feature.draw()
 				} catch(e) {$l(e)}
 			}
 		})
 
-		this.feature_queue.each(function(item) {
-			(item.draw.bind(item))()
+		this.feature_queue.each(function(feature) {
+			(feature.draw.bind(item))()
 		})
 		this.feature_queue = []
 
@@ -349,7 +349,7 @@ var Cartagen = {
 
 //= require <util/util>
 //= require <config/style>
-//= require <data/feature>
+//= require <data/data>
 //= require <glop/glop>
 //= require <interface/interface>
 //= require <mapping/map>

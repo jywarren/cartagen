@@ -161,7 +161,7 @@ var User = {
 		node.user_submitted = true
 		
 		if (draw) {
-			Geohash.put(node.lat, node.lon, node, 1)
+			Data.put(node.lat, node.lon, node, 1)
 			objects.push(node)
         	Glop.trigger_draw()
 		}
@@ -282,7 +282,7 @@ var User = {
 			User.way.lineWidth = User.line_width
 			User.way.age = 40
 			User.way.user_submitted = true
-			Geohash.put(Projection.y_to_lat(User.way.y), Projection.x_to_lon(User.way.x), User.way, 1)
+			Data.put(Projection.y_to_lat(User.way.y), Projection.x_to_lon(User.way.x), User.way, 1)
 			Glop.trigger_draw()			
 		}
 		User.drawing_way = !User.drawing_way
@@ -378,7 +378,7 @@ var User = {
 					n.y = Projection.lat_to_y(n.lat)
 					n.strokeStyle = "rgba(0,0,0,0)"
 					n.user_submitted = true
-					Geohash.put(n.lat, n.lon, n, 1)
+					Data.put(n.lat, n.lon, n, 1)
 				}
 			}
 		})
