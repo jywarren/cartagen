@@ -6407,7 +6407,7 @@ Object.extend(Data, {
 	should_draw: function() {
 		return (
 			this.force_get_features ||
-			this.features.length == 0 ||
+			this.current_features.length == 0 ||
 			Map.zoom / this.last_get_features.zoom > 1.1 ||
 			Map.zoom / this.last_get_features.zoom < 0.9 ||
 			Math.abs(this.last_get_features.x - Map.x) > 100 ||

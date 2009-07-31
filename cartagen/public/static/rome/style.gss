@@ -1,7 +1,7 @@
 body: {
 	fillStyle: "white",
 	lineWidth: 0,
-	pattern: "/images/brown-paper.jpg",
+	pattern: "samples/rome/images/brown-paper.jpg",
 	menu: {
 		"Edit GSS": Cartagen.show_gss_editor,
 		"Download Image": Cartagen.redirect_to_image,
@@ -33,13 +33,13 @@ way: {
 island: {
 	strokeStyle: "#24a",
 	lineWidth: 4,
-	pattern: "/images/brown-paper.jpg"
+	pattern: "samples/rome/images/brown-paper.jpg"
 },
 relation: {
 	fillStyle: "#57d",
 	strokeStyle: "#24a",
 	lineWidth: 4,
-	pattern: "/images/pattern-water.gif"
+	pattern: "samples/rome/images/pattern-water.gif"
 },
 administrative: {
 	lineWidth: 50,
@@ -71,12 +71,12 @@ waterway: {
 	fillStyle: "#57d",
 	strokeStyle: "#24a",
 	lineWidth: 4,
-	pattern: "/images/pattern-water.gif"
+	pattern: "samples/rome/images/pattern-water.gif"
 },
 water: {
 	strokeStyle: "#24a",
 	lineWidth: 4,
-	pattern: "/images/pattern-water.gif"
+	pattern: "samples/rome/images/pattern-water.gif"
 },
 highway: {
 	strokeStyle: "white",

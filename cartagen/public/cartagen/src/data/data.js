@@ -99,7 +99,7 @@ Object.extend(Data, {
 			// is a re-get forced?
 			this.force_get_features || 
 			// do we have no features yet?
-			this.features.length == 0 || 
+			this.current_features.length == 0 || 
 			// have we zoomed significantly? (more than 10%)
 			Map.zoom / this.last_get_features.zoom > 1.1 || 
 			Map.zoom / this.last_get_features.zoom < 0.9 ||

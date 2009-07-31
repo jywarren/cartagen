@@ -1,0 +1,40 @@
+﻿Cartagen: A Framework for Dynamic Mapping (Client Edition)
+
+Version 0.6.1
+Released 7/29/09
+
+Please note that this is a beta release. There are know bugs and missing
+features. It is not intended for production systems.
+
+CHANGES
+
+- Zooming works in iframes
+
+- Don't break keyboard controls -- allow browser to handle keyboard events after Cartagen
+
+- Move code around to improve API, including isolating Coastline code, moving things out
+  of the Cartagen namespace, and separating data access API (now in the Data namespace) from the
+  Geohash namespace.
+  
+- Loading indicator works with rotation
+
+KNOWN BUGS
+
+- Automatic label rotation sometimes does not work properly. Investigation of
+  this issue is ongoing.
+  
+INCOMPATIBILITIES
+
+The lat1, lat2, lng1, and lng2 parameters that were used in Cartagen.setup in 
+the 0.5.x series are no longer used. They have been replaced by simply “lat” 
+and “lng”. Please update your setup calls accordingly.
+
+CONTRIBUTORS
+
+Cartagen is developed at the MIT Media Lab in Cambridge, MA, USA by Jeffrey
+Warren and Ben Weissmann. <http://wiki.cartagen.org/> has up-to-date
+information and resources on how to contribute to the project.
+  
+MORE INFORMATION
+
+<http://wiki.cartagen.org/> is the best source of information on Cartagen.

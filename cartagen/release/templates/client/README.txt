@@ -9,5 +9,5 @@ Information specific to this release, including changes, known bugs,
 and contributor credits are in NOTES.txt.
 
 For up-to-date documentation on this version of Cartagen, visit 
-<http://map.cartagen.org/permalink/client-docs>.
+<http://cartagen.org/permalink/client-docs>.
 
