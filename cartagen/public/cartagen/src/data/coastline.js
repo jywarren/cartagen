@@ -1,22 +1,18 @@
+/**
+ * @namespace Namespace for methods to detect and handle partial coastlines in
+ *            data.
+ */
 var Coastline = {
 	/**
-	 * 
+	 * Binds {@link Coastline.draw} to cartagen:predraw
 	 */
 	initialize: function() {
-		// Cartagen.observe('predraw',		'draw',this)
-		// Cartagen.observe('postdraw',		'cleanup',this)
-		// Cartagen.observe('initialize',	'setup',this)
-
-		// Cartagen.observe({
-		// 	predraw: 'a',
-		// 	draw: 'b',
-		// 	postdraw: 'c'
-		// }, this)
-		
-		$('canvas').observe('cartagen:predraw', Coastline.draw.bindAsEventListener(this))
+		$('canvas').observe('cartagen:predraw',
+		                    Coastline.draw.bindAsEventListener(this))
 	},
 	/**
-	 * Array of coastline ways to be assembled occasionally into coastline 'collected way' relations
+	 * Array of coastline ways to be assembled occasionally into coastline
+	 * 'collected way' relations
 	 */
 	coastlines: [],
 	/**
@@ -27,21 +23,31 @@ var Coastline = {
 	 */
 	coastline_nodes: [],
 	/**
-	 * 
+	 * Array of current coastline nodex, as well as their entry and exit angle.
+	 * Each member of this array is and array in the format
+	 * [coastline_node_array, [entry_angle, exit_angle]]. Entry and exit angles
+	 * are in radians, measured clockwise from the +y axis.
 	 */
 	assembled_coastline: [],
 	/**
-	 * 
+	 * Refreshes coastline data. Bound to cartagen:predraw
 	 */
 	draw: function() {
-		$l('draw me!!!')
 		Coastline.assembled_coastline = []
-		Feature.relations.values().each(function(object) {
-			// invent a better way to trigger collect_nodes, based on Viewport change:
-			// if (Glop.frame == 0 || Glop.frame % 30 == 0) object.collect_nodes()
-			$l(this.id+' relation')
+		Data.relations.values().each(function(object) {
+			// invent a better way to trigger collect_nodes, based on Viewport
+			// change:
+			//
+			// if (Glop.frame == 0 || Glop.frame % 30 == 0)
+			//     object.collect_nodes()
+			
+			if (Config.coastline_debug) $l(this.id+' relation')
+			
 			object.collect_nodes()
-			if (object.coastline_nodes.length > 0) Coastline.assembled_coastline.push([object.coastline_nodes,[object.entry_angle,object.exit_angle]])
+			if (object.coastline_nodes.length > 0)
+				Coastline.assembled_coastline.push([object.coastline_nodes,
+				                                   [object.entry_angle,
+												    object.exit_angle]])
 		})
 	
 		// if we have any coastline relations to run through and draw:
@@ -52,8 +58,11 @@ var Coastline = {
 		
 			var start_corner,end_corner,start_angle,end_angle
 			Coastline.assembled_coastline.each(function(coastline,index) {
-				coastline.push(Viewport.nearest_corner(coastline[0].first()[0],coastline[0].first()[1]))
-				coastline.push(Viewport.nearest_corner(coastline[0].last()[0],coastline[0].last()[1]))
+				coastline.push(Viewport.nearest_corner(coastline[0].first()[0],
+				                                       coastline[0].first()[1]))
+													   
+				coastline.push(Viewport.nearest_corner(coastline[0].last()[0],
+				                                       coastline[0].last()[1]))
 			})
 		
 			var corners = []
@@ -61,24 +70,35 @@ var Coastline = {
 			Coastline.assembled_coastline.each(function(coastline,index) { 
 				//coastline[2] = child start_corner ([x,y])
 				//coastline[3] = child end_corner ([x,y])
+				
 				corners.push(coastline[2][2])
 				$C.move_to(coastline[2][0],coastline[2][1])
 			
-				// $l(coastline[0].length+':'+coastline[2][2]+'=start '+coastline[0].first()[0]+','+coastline[0].first()[1]+'=first')
-			
-				// $C.save()
-				// $C.opacity(0.4)
-				// $C.fill_style('green')
-				// $C.rect(coastline[2][0]-50,coastline[2][1]-50,100,100)
-				// $C.restore()
+				if (Config.coastline_debug) {
+					$l(coastline[0].length + ':'+coastline[2][2]+'=start ' + 
+					   coastline[0].first()[0] + ','+coastline[0].first()[1] + 
+					   '=first')
+
+					$C.save()
+					$C.opacity(0.4)
+					$C.fill_style('green')
+					$C.rect(coastline[2][0]-50,coastline[2][1]-50,100,100)
+					$C.restore()
+				}
 			
 				coastline[0].each(function(node,c_index) { 
 					$C.line_to(node[0],node[1])
-					// $C.save()
-					// $C.fill_style('green')
-					// $C.rect(node[0]-5,node[1]-5,10,10)
-					// $C.draw_text("Helvetica",20,'white',node[0]-10,node[1]-10,parseInt((coastline[1][0]*180)/Math.PI)+','+index+':'+c_index)
-					// $C.save()
+					
+					if (Config.coastline_debug) {
+						$C.save()
+						$C.fill_style('green')
+						$C.rect(node[0]-5,node[1]-5,10,10)
+						$C.draw_text("Helvetica", 20, 'white', node[0]-10, 
+						             node[1]-10, 
+									 parseInt((coastline[1][0]*180)/Math.PI) + 
+									           ',' + index + ':'+c_index)
+						$C.save()
+					}
 				}) 
 				$C.line_to(coastline[3][0],coastline[3][1])
 			
@@ -87,15 +107,22 @@ var Coastline = {
 					// walk back to the start point before going on to the next:
 					if (index != Coastline.assembled_coastline.length-1) {
 						corners.push(coastline[3][2],coastline[2][2])
-						$l('walking to beginning!: '+coastline[3][2]+"/"+coastline[2][2]+':'+Coastline.walk(coastline[3][2],coastline[2][2],false).inspect())
+						
+						if(Config.coastline_debug) {
+							$l('walking to beginning!: '+
+						       coastline[3][2] + "/" + coastline[2][2] + ':' + 
+							    Coastline.walk(coastline[3][2],
+							                   coastline[2][2],false).inspect())
+						}
+						
 						Coastline.walk(coastline[3][2],coastline[2][2],false).each(function(n) {
 							$C.line_to(n[0],n[1])
 						})
 					}
 					// walk on to the next coastline:
-					if (coastline[2][2] != Coastline.assembled_coastline[index+1][2][2]) {
+					if (coastline[2][2] !=Coastline.assembled_coastline[index+1][2][2]) {
 						corners.push(coastline[2][2],Coastline.assembled_coastline[index+1][2][2])
-						$l('walking to next!: '+coastline[2][2]+"/"+Coastline.assembled_coastline[index+1][2][2]+':'+Coastline.walk(coastline[2][2],Coastline.assembled_coastline[index+1][2][2]).inspect())
+						if(Config.coastline_debug) $l('walking to next!: '+coastline[2][2]+"/"+Coastline.assembled_coastline[index+1][2][2]+':'+Coastline.walk(coastline[2][2],Coastline.assembled_coastline[index+1][2][2]).inspect())
 						Coastline.walk(coastline[2][2],Coastline.assembled_coastline[index+1][2][2]).each(function(n) {
 							$C.line_to(n[0],n[1])
 						})
@@ -111,47 +138,49 @@ var Coastline = {
 					end_angle = coastline[1][1]
 				}
 			},this)
+			
+			if(Config.coastline_debug) {
+				$C.save()
+				$C.opacity(0.4)
+				$C.fill_style('yellow')
+				$C.rect(end_corner[0]-35,end_corner[1]-35,70,70)
+				$C.restore()
 
-			// $C.save()
-			// $C.opacity(0.4)
-			// $C.fill_style('yellow')
-			// $C.rect(end_corner[0]-35,end_corner[1]-35,70,70)
-			// $C.restore()
-			// 
-			// $C.save()
-			// $C.opacity(1)
-			// $C.fill_style('purple')
-			// $C.rect(start_corner[0]-20,start_corner[1]-20,40,40)
-			// $C.restore()
-		
-		
-			// if 
-			// walk back to the start point ONLY if the start angle is less than the end angle.
-			// it's not enough to know they're both at corner 1; did it turn clockwise or not?
-			// $l('angles: end:'+end_corner[2]+'/'+parseInt((end_angle*180)/Math.PI) +', start:'+start_corner[2]+'/'+ parseInt((start_angle*180)/Math.PI))
-				// $C.save()
-				// $C.opacity(1)
-				// $C.fill_style('red')
-				// $C.translate(Map.x,Map.y)
-				// $C.rotate(end_angle)
-				// $C.rect(0,-100,4,100)
-				// $C.rotate(-end_angle)
-				// $C.fill_style('green')
-				// $C.rotate(start_angle)
-				// $C.rect(0,-100,4,100)
-				// $C.rotate(-start_angle)
-				// $C.translate(-Map.x,-Map.y)
-				// $C.restore()
+				$C.save()
+				$C.opacity(1)
+				$C.fill_style('purple')
+				$C.rect(start_corner[0]-20,start_corner[1]-20,40,40)
+				$C.restore()
+
+
+				// if 
+				// walk back to the start point ONLY if the start angle is less than the end angle.
+				// it's not enough to know they're both at corner 1; did it turn clockwise or not?
+				$l('angles: end:'+end_corner[2]+'/'+parseInt((end_angle*180)/Math.PI) +', start:'+start_corner[2]+'/'+ parseInt((start_angle*180)/Math.PI))
+				$C.save()
+				$C.opacity(1)
+				$C.fill_style('red')
+				$C.translate(Map.x,Map.y)
+				$C.rotate(end_angle)
+				$C.rect(0,-100,4,100)
+				$C.rotate(-end_angle)
+				$C.fill_style('green')
+				$C.rotate(start_angle)
+				$C.rect(0,-100,4,100)
+				$C.rotate(-start_angle)
+				$C.translate(-Map.x,-Map.y)
+				$C.restore()
+			}
 			if ((end_corner[2] == start_corner[2]) && (end_angle < start_angle)) {
-				// $l('no-walk!!')
+				if(Config.coastline_debug) $l('no-walk!!')
 			} else if (end_corner[2] != start_corner[2] || end_angle > start_angle) {
 				corners.push(end_corner[2],start_corner[2])
-				$l('walking around!: '+end_corner[2]+"/"+start_corner[2]+':'+Coastline.walk(end_corner[2],start_corner[2]).inspect())
+				if(Config.coastline_debug) $l('walking around!: '+end_corner[2]+"/"+start_corner[2]+':'+Coastline.walk(end_corner[2],start_corner[2]).inspect())
 				Coastline.walk(end_corner[2],start_corner[2]).each(function(n) {
 					$C.line_to(n[0],n[1])
 				})
 			}
-			$l('ending: '+corners)
+			if(Config.coastline_debug) $l('ending: '+corners)
 		
 			var coastline_style = Style.styles.relation
 			if (coastline_style.lineWidth) $C.line_width(coastline_style.lineWidth)
@@ -169,6 +198,9 @@ var Coastline = {
 			$C.fill()
 		}
 	},
+	/**
+	 * Re-calculates coastline Ways
+	 */
 	refresh_coastlines: function() {
 		// flush coastline collected_ways relations and re-generate them with new coastlines:
 		Coastline.coastlines.each(function(c){c.neighbors = []})
@@ -184,7 +216,7 @@ var Coastline = {
 		})
 		
 		var coastline_chains = Coastline.coastlines.clone()
-		Feature.relations = new Hash()
+		Data.relations = new Hash()
 		while (coastline_chains.length > 0) {
 			var data = {
 				members: coastline_chains.first().chain([],true,true)
@@ -228,20 +260,30 @@ var Coastline = {
 		}
 		cycle.each(function(coord,index) {
 			nodes.push([coord[0],coord[1]])
-			// if (clockwise) nodes.push([coord[0],coord[1]])
-			// else nodes.unshift([coord[0],coord[1]])
+			
+			if(Config.coastline_debug) {
+				 if (clockwise) nodes.push([coord[0],coord[1]])
+				 else nodes.unshift([coord[0],coord[1]])
 
-			// $C.line_to(coord[0],coord[1])
+				 $C.line_to(coord[0],coord[1])
 
-			// $C.save()
-			// $C.opacity(1)
-			// $C.fill_style('black')
-			// $C.rect(coord[0]-15,coord[1]-15,30,30)
-			// $C.draw_text("Helvetica",40,'white',coord[0]-20,coord[1]-20,index)
-			// $C.restore()
+				 $C.save()
+				 $C.opacity(1)
+				 $C.fill_style('black')
+				 $C.rect(coord[0]-15,coord[1]-15,30,30)
+				 $C.draw_text("Helvetica",40,'white',coord[0]-20,coord[1]-20,index)
+				 $C.restore()
+			}
 		})
 		return nodes
 	},
+	/**
+	 * jeff's debugging method to do something with the something that has
+	 * something to do with something. It was used at some time to do something
+	 * somewhere in the code, and someone probably knows something about what it
+	 * does with something.
+	 * @ignore
+	 */
 	walk_n: function(start,end,clockwise) {
 		if (Object.isUndefined(clockwise)) clockwise = true
 		var nodes = []

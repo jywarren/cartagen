@@ -1,7 +1,3 @@
-/**
- * Represents a label for a Feature.
- * @class
- */
 var Label = Class.create(
 /**
  * @lends Label#
@@ -10,50 +6,13 @@ var Label = Class.create(
 	/**
 	 * Sets the default label properties and owner.
 	 * @param {Feature} owner
+	 * 
+	 * @class Represents a label for a Feature.
+	 * 
 	 * @constructs
 	 */
     initialize: function(owner) {
-		/**
-		 * Font to use if native canvas text is supported
-		 * @type String
-		 */
-		this.fontFamily = 'Lucida Grande, sans-serif',
-		/**
-		 * Font size, in pts.
-		 * @type Number
-		 */
-	    this.fontSize = 11,
-		/**
-		 * Background color for label. Set to null for no label background.
-		 * @type String
-		 */
-	    this.fontBackground = null,
-		/**
-		 * Text to place on label. Set to null to not draw label.
-		 * @type String
-		 */
-	    this.text = null,
-		/**
-		 * Set to "fixed" to not scale label based on zoom level
-		 * @type String
-		 */
-	    this.fontScale = false,
-		/**
-		 * Distance, in pixels, between edge of label and text
-		 * @type Number
-		 */
-	    this.padding = 6,
-		/**
-		 * Color of the text
-		 * @type String
-		 */
-	    this.fontColor = '#eee',
-		/**
-		 * Angle, in radians (relative to the +x axis), to rotate this label by.
-		 * Set to "fixed" to rotate with the map.
-		 * @type Number | String
-		 */
-		this.fontRotation = 0,
+
 		/**
 		 * The parent feature that this label belongs to
 		 * @type Feature
@@ -118,5 +77,18 @@ var Label = Class.create(
 						 this.text)
 			$C.restore()
         }
-    }
+    },
+	/**
+	 * Applies default styles to this Label
+	 */
+	apply_default_styles: function() {
+		this.fontFamily = 'Lucida Grande, sans-serif'
+	    this.fontSize = 11
+	    this.fontBackground = null
+	    this.text = null
+	    this.fontScale = false
+	    this.padding = 6
+	    this.fontColor = '#eee'
+		this.fontRotation = 0
+	}
 })

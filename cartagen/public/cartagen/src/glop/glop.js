@@ -57,19 +57,9 @@ var Glop = {
 		//$('canvas').width = Glop.width
 		//$('canvas').height = Glop.height
 		Events.drag()	
-		/**
-		 * @name Glop#glop:predraw
-		 * @event
-		 * Fired each frame before features are drawn.
-		 */
+
 		$('canvas').fire('glop:predraw')
-		/**
-		 * @name Glop#glop:draw
-		 * @event
-		 * Fired each frame between glop:predraw and glop:postdraw. SHould be used
-		 * to draw features on the canvas. If the 'no_draw' property of the event
-		 * is set to true, GLOP will not raw the objects array.
-		 */
+
 		draw_event = $('canvas').fire('glop:draw')
 		
 		if (!draw_event.no_draw) {
@@ -77,12 +67,7 @@ var Glop = {
 				object.draw()
 			})
 		}
-		
-		/**
-		 * @name Glop#glop:postdraw
-		 * @event
-		 * Fired at the end of each frame, after features are drawn.
-		 */
+
 		$('canvas').fire('glop:postdraw')
 	},
 	/**
@@ -102,7 +87,6 @@ var Glop = {
 	 * @param {Event} event
 	 */
 	trigger_draw: function(t) {
-		// t = t || 1
 		if (Object.isNumber(t) && !Object.isUndefined(t)) {
 			if (t > this.tail) this.tail = t
 		} else {

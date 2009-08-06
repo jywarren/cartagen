@@ -32,8 +32,8 @@ var Geometry = {
 		return centroid
 	},
 	/**
-	 * Calculates the sides of the smallest possible box that holds all the specified points.
-	 * Used to calculate the bounding box of a polygon.
+	 * Calculates the sides of the smallest possible box that holds all the
+	 * specified points. Used to calculate the bounding box of a polygon.
 	 * @param {Node[]} points Array of nodes
 	 * @return Bounding box, in [y1, x1, y2, x2] format
 	 * @type Number[]
@@ -55,19 +55,16 @@ var Geometry = {
 	 * @param {Number} x2    X-coordinate of the second point
 	 * @param {Number} y2    Y-coordinate of the second point
 	 * @param {Number} fudge Maximum distance between the points
-	 * @return True if the points are closer than the specified fudge distance, else false
+	 * @return True if the points are closer than the specified fudge distance,
+	 *         else false
 	 * @type Boolean
 	 */
 	overlaps: function(x1,y1,x2,y2,fudge) {
-		if (x2 > x1-fudge && x2 < x1+fudge) {
-			if (y2 > y1-fudge && y2 < y1+fudge) {
+		if (x2 > x1-fudge && x2 < x1+fudge &&
+			y2 > y1-fudge && y2 < y1+fudge)
 		  		return true
-			} else {
-				return false
-			}
-		} else {
-			return false
-		}
+
+		return false
 	},
 	/**
 	 * Determines if two boxes overlap, given their sides.
@@ -83,12 +80,15 @@ var Geometry = {
 	 * @return True if the boxes overlap, else false
 	 * @type Boolean
 	 */
-	intersect: function(box1top,box1left,box1bottom,box1right,box2top,box2left,box2bottom,box2right) {
-		return !(box2left > box1right || box2right < box1left || box2top > box1bottom || box2bottom < box1top)
+	intersect: function(box1top, box1left, box1bottom, box1right,
+	                    box2top, box2left, box2bottom, box2right) {
+							
+		return !(box2left > box1right || box2right < box1left ||
+		         box2top > box1bottom || box2bottom < box1top)
 	},
 	/**
-	 * Determines of a point is in a polygon. This should be rewritten at some point, as the source
-	 * is really nasty.
+	 * Determines of a point is in a polygon.
+	 * 
 	 * @param {Node[]} poly Array of nodes that make up the polygon
 	 * @param {Number} x    X-coordinate of the point to check for
 	 * @param {Number} y    Y-coordinate of the point to check for
@@ -100,15 +100,24 @@ var Geometry = {
 	 *         http://jsfromhell.com/math/is-point-in-poly</a>
 	 */
 	is_point_in_poly: function(poly, x, y){
-	    for(var c = false, i = -1, l = poly.length, j = l - 1; ++i < l; j = i)
-	        ((poly[i].y <= y && y < poly[j].y) || (poly[j].y <= y && y < poly[i].y))
-	        && (x < (poly[j].x - poly[i].x) * (y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x)
-	        && (c = !c);
+		var c = false
+		var i = -1
+		var l = poly.length
+		var j = l - 1
+		
+	    for (var i = -1; ++i < l; j = i) {
+			if (Math.in_range(y, poly[i].y, poly[j].y) &&
+				x < (poly[j].x - poly[i].x)*(y - poly[i].y)/(poly[j].y - poly[i].y) + poly[i].x
+			) {
+				c = !c
+			}
+		}
 	    return c;
 	},
 	
 	/**
-	 * Returns the intersection of a line and the line pependicular to it that intersects a point.
+	 * Returns the intersection of a line and the line pependicular to it that
+	 * intersects a point.
 	 * @param {x}  x-coordinate of the point
 	 * @param {y}  y-coordinate of the point
 	 * @param {x0} x-coordate of the first endpoint of the line
@@ -116,15 +125,15 @@ var Geometry = {
 	 * @param {x1} x-coordate of the second endpoint of the line
 	 * @param {y1} y-coordate of the second endpoint of the line
 	 *
-	 * @return Object with x and y properties
-	 * @type Object
+	 * @return {Object} Object with x and y properties
 	 *
-	 * @author OpenLayers <http://openlayers.org> (adapted from Geometry.LineString#distanceTo)
+	 * @author OpenLayers <http://openlayers.org>
+	 *         (adapted from Geometry.LineString#distanceTo)
 	 */
 	 point_line_distance: function(x, y, nodes){
-		 var seg
+		 var seg, result
 		 var stop = nodes.length - 1
-		 min = Number.MAX_VALUE
+		 var min = Number.MAX_VALUE
 		 for(var i = 0; i < stop; ++i) {
 			 seg = {
 				 x1: nodes[i].x,
@@ -133,7 +142,8 @@ var Geometry = {
 				 y2: nodes[i+1].y
 			 }
 			 
-			 result = Geometry.distance_to_segment(x, y, seg.x1, seg.y1, seg.x2, seg.y2)
+			 result = Geometry.distance_to_segment(x, y, seg.x1, seg.y1, 
+			                                             seg.x2, seg.y2)
 			 
 			 if(result < min) {
 				 min = result
@@ -141,8 +151,10 @@ var Geometry = {
 					 break
 				 }
 			 } else {
-				 // if distance increases and we cross y0 to the right of x0, no need to keep looking.
-				 if(seg.x2 > x && ((y > seg.y1 && y < seg.y2) || (y < seg.y1 && y > seg.y2))) {
+				 // if distance increases and we cross y0 to the right of x0,
+				 // no need to keep looking.
+				 if(seg.x2 > x && ((y > seg.y1 && y < seg.y2) || 
+				                   (y < seg.y1 && y > seg.y2))) {
 					 break
 				 }
 			 }
@@ -150,10 +162,12 @@ var Geometry = {
 		 return min
 	},
 	/**
-	 * Returns the distance between a point (x0, x1) and a line (with endpoints (x1, y1) and (x2, y2))
+	 * Returns the distance between a point (x0, x1) and a line (with endpoints
+	 * (x1, y1) and (x2, y2))
 	 *
 	 * @type Number
-	 * @author OpenLayers <http://openlayers.org> (adapted from Geometry.distanceToSegment)
+	 * @author OpenLayers <http://openlayers.org> (adapted from
+	 *         Geometry.distanceToSegment)
 	 */
 	distance_to_segment: function(x0, y0, x1, y1, x2, y2) {
 		var dx = x2 - x1
@@ -176,8 +190,8 @@ var Geometry = {
 	/**
 	 * Finds the area of a polygon
 	 * @param {Node[]}  nodes    Array of nodes that make up the polygon 
-	 * @param {Boolean} [signed] If true, returns a signed area, else returns a positive area.
-	 *                           Defaults to false.
+	 * @param {Boolean} [signed] If true, returns a signed area, else returns a
+	 *                           positive area. Defaults to false.
 	 * @return Area of the polygon
 	 * @type Number
 	 */
@@ -193,6 +207,7 @@ var Geometry = {
 		if (signed) return area/2
 		else return Math.abs(area/2)
 	},
+	
 	distance: function(x,y,x2,y2) {
 		return Math.sqrt(Math.abs(x-x2)*Math.abs(x-x2)+Math.abs(y-y2)*Math.abs(y-y2))
 	},
@@ -200,6 +215,9 @@ var Geometry = {
 	 * Compared two ways based on area
 	 * @param {Way} a
 	 * @param {Way} b
+	 * @return {Number} -1 if a is larger than b or b is not a way,
+	 *                   1 if b is larger than a or a is not a way,
+	 *                   0 if a is the same size as b or neither is a way.
 	 */
 	sort_by_area: function(a,b) {
 		if (a instanceof Way) {
@@ -213,7 +231,12 @@ var Geometry = {
 				return -1 // a wins no matter what if b is not a Way
 			}
 		} else {
-			return 1 // b wins no matter what if a is not a Way
+			if (b instanceof Way) {
+				return 1 // b wins no matter what if a is not a Way
+			}
+			else {
+				return 0
+			}
 		}
 	}
 }

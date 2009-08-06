@@ -1,6 +1,11 @@
-desc "builds cartagen.js"
-task :build do
-	build
+#desc "builds cartagen.js"
+#task :build do
+#	build
+#end
+
+desc "builds cartagen.js for a specific release version"
+task :build, :version do |t, args|
+  build args.version
 end
 
 		
@@ -24,19 +29,32 @@ end
 
 desc "builds the API docs"
 task :docs do
-	Dir.chdir 'lib/jsdoc'
-	puts `java -jar jsrun.jar app/main.js -t=templates/ext/ -d=../../../jsdox/ -a -r=2 ../../src/`
+	Dir.chdir 'lib/jsdoc-toolkit'
+	puts `java -jar jsrun.jar app/run.js -v -t=templates/outline/ -d=../../../docs/ -a -r=3 ../../src/`
 end
 
-desc "Finds while file a source line is in"
+desc "Finds which file a source line is in"
 task :which, :line do |t, args|
 	lines = Marshal.load IO.read('.line_data.dat')
 	puts lines[args.line.to_i]
 end
 
 
-def build
-	puts 'building... '+DateTime.now.to_s
+def build(version = nil)
+	puts 'building... ' + DateTime.now.to_s
+  
+  # change constants
+  
+  constants = YAML.load_file 'src/constants.yml'
+  constants['BUILD_DATE'] = DateTime.now.to_s
+  if version
+    old_version = constants['VERSION']
+    constants['VERSION'] = version
+  end
+  File.open 'src/constants.yml', 'w' do |f|
+    f.print(YAML.dump constants)
+  end
+  
 	$:.push 'lib/sprockets'
 	require 'sprockets'
 	
@@ -54,5 +72,15 @@ def build
 	
 	concatenation.save_to("cartagen.js")
 	
+  if version
+    constants = YAML.load_file 'src/constants.yml'
+    if version
+      constants['VERSION'] = old_version
+    end
+    File.open 'src/constants.yml', 'w' do |f|
+      f.print(YAML.dump constants)
+    end
+  end
+  
 	puts "Build finished"
 end 

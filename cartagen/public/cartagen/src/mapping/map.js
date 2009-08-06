@@ -3,7 +3,7 @@
 //= require "viewport"
 
 /**
- * Stores data about the map and methods to manipulate it
+ * @namespace Stores data about the map and methods to manipulate it
  */
 var Map = {
 	/**

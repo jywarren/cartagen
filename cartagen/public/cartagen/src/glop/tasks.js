@@ -8,6 +8,13 @@ var TaskManager = Class.create(
  * @lends TaskManager#
  */
 {
+	/**
+	 * Sets up the TaskManager and starts it
+	 * @param {Object} quota Time quota for this TaskManager. See
+	 *                       {@link TaskManager#quota}
+	 * @param {Object} tasks Tasks this TaskManager should manage. See
+	 *                       {@link TaskManager#tasks}
+	 */
 	initialize: function(quota, tasks) {
 		/**
 		 * Amount of time, in miliseconds, allocated to the TaskManager each frame.
@@ -19,17 +26,24 @@ var TaskManager = Class.create(
 		 */
 		this.tasks = tasks || []
 		
+		/**
+		 * Percent of tasks completed
+		 */
+		this.completed = 0
+		
 		// This could support Web Workers
 		//this.workers = []
 		
+		/**
+		 * The bound version of {@see TaskManager#run}, used for event
+		 * event callbacks.
+		 */
 		this.listener = this.run.bindAsEventListener(this)
-		
-		this.completed = 0
 		
 		this.start()
 	},
 	/**
-	 * Tasks to be performed; each is a Task object with members
+	 * Runs a single processing cycle.
 	 */ 
 	run: function() {
 		var i = 0
@@ -59,19 +73,34 @@ var TaskManager = Class.create(
 		
 		if (this.tasks.length < 1) this.stop()
 	},
+	/**
+	 * Adds a Task to this TaskManager and starts it if it is stopped.
+	 * @param {Task} task
+	 */
 	add: function(task) {
 		this.tasks.push(task)
 		
 		if (!this.active) this.start()
 	},
+	/**
+	 * Starts processing tasks when glop:predraw is fired.
+	 */
 	start: function() {
 		this.active = true
 		$('canvas').observe('glop:predraw', this.listener)
 	},
+	/**
+	 * Stops processing tasks
+	 */
 	stop: function() {
 		this.active = false
 		$('canvas').stopObserving('glop:predraw', this.listener)
 	},
+	/**
+	 * Calculates the percent completed. Do not call this directly to get
+	 * percent completed; just read {@link TaskManager#completed}.
+	 * @param {Task[]} tasks Tasks to calculate percentage from.
+	 */
 	get_completed: function(tasks) {
 		var total = 0
 		var left = 0
@@ -93,29 +122,51 @@ var Task = Class.create(
  * @lends Task#
  */
 {
+	/**
+	 * Sets up the Task.
+	 * @param {Object[]}           members     See {@link Task#members}
+	 * @param {Object}             process     See {@link Task#process}
+	 * @param {Function | Boolean} [condition] See {@link Task#condition}.
+	 *                                         Defaults to true.
+	 * @param {Task[]}             [deps]      See {@link Task#deps} Defaults to
+	 *                                         [].
+	 *                                         
+	 * @property {Number} id Unique task id for this Task.
+	 */
 	initialize: function(members, process, condition, deps) {
 		/**
 		 * A list of values upon which to perform the "process" function
 		 * @type Object[]
 		 */ 
 		this.members = members || []
+		/**
+		 * Number of members this Task was initialized with.
+		 */
 		this.total_members = members.length || 0
 		/**
 		 * A function to process objects with
 		 * @type Function
 		 */
 		this.process = process || Prototype.emptyFunction
-		/**
-		 * A function or boolean that determines whther the task should be run.
-		 * @type Function | Boolean
-		 */
+		
 		if (Object.isUndefined(condition)) condition = true
+		/**
+		 * A function that returns a boolean or a static boolean that determines
+		 * whther the task should be run.
+		 * @type Function | Boolean
+		 */		
 		this.condition = condition
 	
 		Task.register(this)
 		
+		/**
+		 * An array of tasks that
+		 */
 		this.deps = deps || []
 	},
+	/**
+	 * Process the next member
+	 */
 	exec_next: function() {
 		if (!this.should_run()) return true
 		
@@ -127,6 +178,10 @@ var Task = Class.create(
 			return false
 		}
 	},
+	/**
+	 * Determines whether this task should run. Checks both
+	 * {@link Task#pass_condition} and dependencies
+	 */
 	should_run: function() {
 		if (!this.pass_condition) return false
 		
@@ -138,102 +193,53 @@ var Task = Class.create(
 		
 		return true
 	},
+	/**
+	 * Determines whether this Task passes its condition.
+	 * @see Task#condition
+	 */
 	pass_condition: function() {
 		if (Object.value(this.condition, this) === false) return false
 		
 		return true
 	},
-
-	// Currently unused
-	
-	/**
-	 * Whether this task's progress bar is visible by default.
-	 */ 
-	visible: false,
-	/**
-	 * Displays a progress bar for % of members processed
-	 */ 
-	display: function() {
-		if (this.visible || Config.debug) {
-			// display a 
-		}
-	}
 })
 
+/**
+ * The lowest available unique id for Tasks
+ * @type Number
+ * @static
+ */
 Task.cur_uid = 1
+/**
+ * Registry of tasks and whether they are done, indexed by id. Used for
+ * dependancy resolution. Keys are Task ids and values are whether the task
+ * is done.
+ * @type Object (Hash-like, Number -> Boolean)
+ * @static
+ */
 Task.registry = {}
+/**
+ * Registers a task, marking it as incomplete and setting the Tasks's id.
+ * @param {Task} task
+ * @static
+ */
 Task.register = function(task) {
 	task.id = Task.cur_uid++
 	Task.registry[task.id] = false
 }
+/**
+ * Marks a task as complete
+ * @param {Number} id Task id
+ * @static
+ */
 Task.complete = function(id) {
 	Task.registry[id] = true
 }
+/**
+ * Determines whether a Task is done
+ * @param {Number} id Task id
+ * @static
+ */
 Task.is_done = function(id) {
 	return Task.registry[id]
 }
-
-
-// Not currently used
-
-/**
- * Representation of a single timer, which tracks
- * how far behind it's expected interval is.
- * @class
- */
-var Timer = Class.create(
-/**
- * @lends Timer#
- */
-{
-	initialize: function(interval,units) {
-		if (units == 'seconds') {
-			// ############ translate
-		} else if (!Object.isUndefined(interval)) this.interval = interval
-	},
-	/**
-	 * Interval of timer 
-	 */ 
-	interval: 40,
-	/**
-	 * Tracks how far behind projected timer completion we are
-	 */ 
-	lag: 0
-})
-
-/*
-TaskTest = {
-	a: $R(1, 10).toArray(),
-	b: $R(1, 10).toArray(),
-	c: $R(1, 10).toArray(),
-	d: $R(1, 10).toArray(),
-	a2: [],
-	b2: [],
-	c2: [],
-	d2: [],
-	fa: function(o) {
-		for (var i=0; i<9999999; i++){}
-		TaskTest.a2.push(o)
-	},	
-	fb: function(o) {
-		for (var i=0; i<9999999; i++){}
-		TaskTest.b2.push(o)
-	},	
-	fc: function(o) {
-		for (var i=0; i<9999999; i++){}
-		TaskTest.c2.push(o)
-	},
-	fd: function(o) {
-		for (var i=0; i<9999999; i++){}
-		TaskTest.d2.push(o)
-	}
-}
-
-function tt_init() {
-	TaskTest.ta = new Task(TaskTest.a, TaskTest.fa, true),
-	TaskTest.tb = new Task(TaskTest.b, TaskTest.fb, true, [TaskTest.ta.id]),
-	TaskTest.tc = new Task(TaskTest.c, TaskTest.fc, true, [TaskTest.tb.id]),
-	TaskTest.td = new Task(TaskTest.d, TaskTest.fd, true, [TaskTest.tb.id]),
-	TaskTest.tm = new TaskManager(1000, [TaskTest.ta, TaskTest.tb, TaskTest.tc, TaskTest.td])
-}
-*/

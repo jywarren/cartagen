@@ -1,11 +1,14 @@
 /**
- * @namespace Contains methods and variables for spacially indexing features using geohashes.
+ * @namespace Contains methods and variables for spacially indexing features
+ *            using geohashes.
  */
 var Geohash = {}
 
 Object.extend(Geohash, Enumerable)
 
-Object.extend(Geohash, {
+Object.extend(Geohash, 
+/** @lends Geohash */
+{
 	/**
 	 * If true, a grid of geohashes is drawn on the map
 	 * @type Boolean
@@ -175,6 +178,10 @@ Object.extend(Geohash, {
 					 key)
 		$C.restore()
 	},
+	/**
+	 * Draws boxes around each geohash currently being drawn if Geohash.grid is
+	 * set to true.
+	 */
 	draw_bboxes: function() {
 		if (Geohash.grid) {
 			Data.current_keys.keys().each(function(key){

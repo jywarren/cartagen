@@ -1,9 +1,3 @@
-/**
- * Represents a way. A way is automatically added to the geohash index when
- * it is instantiated.
- * 
- * @augments Feature
- */
 var Way = Class.create(Feature, 
 /**
  * @lends Way#
@@ -13,6 +7,11 @@ var Way = Class.create(Feature,
 	/**
 	 * Sets up this way's properties and adds it to the geohash index
 	 * @param {Object} data         A set of properties that will be copied to this Way.
+	 * 
+	 * @class Represents a way. A way is automatically added to the geohash index when
+	 * it is instantiated.
+	 * 
+	 * @augments Feature
 	 * @constructs
 	 */
     initialize: function($super, data) {
@@ -72,7 +71,7 @@ var Way = Class.create(Feature,
 		this.width = Math.abs(Projection.x_to_lon(this.bbox[1])-Projection.x_to_lon(this.bbox[3]))
 		this.height = Math.abs(Projection.y_to_lat(this.bbox[0])-Projection.y_to_lat(this.bbox[2]))
 		
-		Feature.ways.set(this.id,this)
+		Data.ways.set(this.id,this)
 		if (this.coastline) {
 			Coastline.coastlines.push(this)
 		} else {
@@ -243,20 +242,28 @@ var Way = Class.create(Feature,
 				$C.draw_image(this.image, this.x-this.image.width/2, this.y-this.image.height/2)	
 			}
 		}
-		// show bboxes for ways:
-		// $C.line_width(1)
-		// $C.stroke_style('red')
-		// $C.stroke_rect(this.bbox[1],this.bbox[0],this.bbox[3]-this.bbox[1],this.bbox[2]-this.bbox[0])
 	},
+	/**
+	 * Applies the default Feature and Way styles.
+	 */
 	apply_default_styles: function($super) {
 		$super()
 		this.outline_color = null
 		this.outline_width = 0
 	},
+	/**
+	 * Applies default styles, then re-applies styles from GSS.
+	 */
 	refresh_styles: function() {
 		this.apply_default_styles()
 		Style.parse_styles(this, Style.styles.way)
 	},
+	/**
+	 * Determines if a point is inside this way. For unclosed ways, the GSS
+	 * width of this way is used to determine if the point is "inside".
+	 * @param {Number} x X-coordinate of the point
+	 * @param {Number} y Y-coordinate of the point
+	 */
 	is_inside: function(x, y) {
 		if (this.closed_poly) {
 			return Geometry.is_point_in_poly(this.nodes, x, y)

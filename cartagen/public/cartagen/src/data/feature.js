@@ -1,8 +1,3 @@
-/**
- * A abstract base class for map features - nodes and ways. Should not be
- * instantiated.
- * @class
- */
 var Feature = Class.create(
 /** 
  * @lends Feature.prototype 
@@ -10,16 +5,20 @@ var Feature = Class.create(
 {
 	/**
 	 * Sets defaults for tags, fillStyle, fontColor fontSize, and fontRotation
+	 * 
+	 * @class An abstract base class for map features - nodes and ways. Should
+	 *        not be instantiated.
+	 * 
 	 * @constructs
 	 */
 	initialize: function() {
 		this.tags = new Hash()
-		this.apply_default_styles()
 		/**
 		 * Label for this way
 		 * @type Label
 		 */
 		this.label = new Label(this)
+		this.apply_default_styles()
 	},
 	/**
 	 * Draws this feature using shape(). Saves/restores the canvas and applies styles. Queues
@@ -64,24 +63,43 @@ var Feature = Class.create(
 	shape: function() {
 		$D.warn('Feature#shape should be overriden')
 	},
+	/**
+	 * Applies GSS hover styles for this feature
+	 * @see remove_hover_styles
+	 */
 	apply_hover_styles: function() {
 		$H(this.hover).each(function(pair) {
 			if (this[pair.key]) this._unhovered_styles[pair.key] = this[pair.key]
 			this[pair.key] = pair.value
 		}, this)
 	},
+	/**
+	 * Removes GSS hover styles for this feature
+	 * @see apply_hover_styles
+	 */
 	remove_hover_styles: function() {
 		Object.extend(this, this._unhovered_styles)
 	},
+	/**
+	 * Applies GSS mouseDown styles for this feature
+	 * @see remove_click_styles
+	 */
 	apply_click_styles: function() {
 		$H(this.mouseDown).each(function(pair) {
 			if (this[pair.key]) this._unclicked_styles[pair.key] = this[pair.key]
 			this[pair.key] = pair.value
 		}, this)
 	},
+	/**
+	 * Removes GSS mouseDown styles for this feature
+	 * @see apply_click_styles
+	 */
 	remove_click_styles: function() {
 		Object.extend(this, this._unclicked_styles)
 	},
+	/**
+	 * Resets all styles to their defaults
+	 */
 	apply_default_styles: function() {
 		this.fillStyle = 'rgba(0,0,0,0)'
 		this.fontColor = '#eee'
@@ -90,30 +108,30 @@ var Feature = Class.create(
 		this.opacity = 1
 		this.strokeStyle = 'black'
 		this.lineWidth = 6
+		this.menu = []
+		this.pattern = null
+		this.outlineColor = null
+		this.outlineWidth = null
+		this.distort = false
+		this.image = null
 		this._unhovered_styles = {}
 		this._unclicked_styles = {}
+		this.label.apply_default_styles()
 	},
+	/**
+	 * Returns the class of this Feature
+	 * @return "Node", "Way", or "Relation"
+	 * @type String
+	 */
 	get_type: function() {
 		return this.__type__
+	},
+	/**
+	 * Resets all styles, then re-applies GSS styles
+	 */
+	refresh_styles: function() {
+		this.apply_default_styles()
 	}
-})
-
-Object.extend(Feature, {
-	/**
-	 * Hash of node id => node
-	 * @type Hash
-	 */
-	nodes: new Hash(),
-	/**
-	 * Hash of way id => way
-	 * @type Way
-	 */
-	ways: new Hash(),
-	/**
-	 * Hash of relation id => relation
-	 * @type Relation
-	 */
-	relations: new Hash()
 })
 
 //= require "types/node"

@@ -1,3 +1,7 @@
+/**
+ * @namespace Handles loading features from a backend server, static data files,
+ *            and/or LocalStorage
+ */
 var Importer = {
 	/**
 	 * An array of bboxes of requested plots... helps in debugging what has been requested.
@@ -15,35 +19,35 @@ var Importer = {
 	plots: new Hash(),
 	/**
 	 * A TaskManager that performs feature parsing
+	 * @type TaskManager
 	 */
 	parse_manager: null,
-	init: function() {
+	/**
+	 * Creates the TaskManager. Bound to cartagen:init.
+	 */
+	initialize: function() {
 		Importer.parse_manager = new TaskManager(50)
 	},
 	/**
-	 * Gets the plot under the current center of the viewport
+	 * Imports the plot under the current center of the viewport
 	 */
 	get_current_plot: function(force) {
 		force = force || false
 		if ((Map.x != Map.last_pos[0] && Map.y != Map.last_pos[1]) || force != false || Glop.frame < 100) {
 			// find all geohashes we want to request:
 			if (Data.current_keys && Data.current_keys.keys()) {
-				try {
 				Data.current_keys.keys().each(function(key) {
 					// this will look for cached plots, or get new ones if it fails to find cached ones
 					if (key.length == 6) Importer.get_cached_plot(key)
 				})
-				} catch(e) {
-					$l(e)
-					// $D._verbose_trace(e)
-				}
 			}
 		}
 		Map.last_pos[0] = Map.x
 		Map.last_pos[1] = Map.y
 	},
 	/**
-	 * Fetches a JSON plot from a static file, given a full url.
+	 * Fetches a JSON plot from a static file.
+	 * @param {String} url Url of file with plots
 	 */
 	get_static_plot: function(url) {
 		$l('fetching ' + url)
@@ -62,6 +66,7 @@ var Importer = {
 	/** 
 	 * Checks against local storage for browers with HTML 5,
 	 * then fetches the plot and parses the data into the objects array.
+	 * @param {String} key Gohash key to load
 	 */
 	get_cached_plot: function(key) {
 		// Remember that parse_objects() will fill localStorage.
@@ -75,7 +80,7 @@ var Importer = {
 				//$l("already loaded plot")
 			} else {
 				// if we haven't, check if HTML 5 localStorage exists in this browser:
-				if (typeof localStorage != "undefined") {
+				if (localStorage) {
 					var ls = localStorage.getItem('geohash_'+key)
 					if (ls) {
 						$l("localStorage cached plot")
@@ -100,10 +105,7 @@ var Importer = {
 	/**
 	 * Requests a JSON plot for a bbox from the server
 	 * 
-	 * @param {Number} _lat1  Upper bound
-	 * @param {Number} _lng1  Left bound
-	 * @param {Number} _lat2  Lower bound
-	 * @param {Number} _lng2  Right bound
+	 * @param {String} key Geohash key to fetch
 	 */
 	load_plot: function(key) {
 		// Importer.plot_array.push(Geohash.bbox(key))
@@ -142,6 +144,12 @@ var Importer = {
 		}
 		f.delay(120)
 	},
+	/**
+	 * Parses a node, creating the Node object and putting it in the Data object
+	 * only if its "display" property is set to true (which is usually true only
+	 * of user-submitted standalone nodes.
+	 * @param {Object} node Object with node data, in OSM JSON format
+	 */
 	parse_node: function(node){
 		var n = new Node
 		n.name = node.name
@@ -158,18 +166,24 @@ var Importer = {
 		n.x = Projection.lon_to_x(n.lon)
 		n.y = Projection.lat_to_y(n.lat)
 		Style.parse_styles(n,Style.styles.node)
+		
+		// TODO:
 		// can't currently afford to have all nodes in the map as well as all ways.
 		// but we're missing some nodes when we render... semantic ones i think. cross-check.
 		// objects.push(n)
-		Feature.nodes.set(n.id,n)
+		
+		Data.nodes.set(n.id,n)
 		if (node.display) {
 			n.display = true
 			n.radius = 50
 			Data.put(n.lat, n.lon, n, 1)
 		}
 	},
+	/**
+	 * Parses a way, creating a Way object and storing it in the Data object
+	 */
 	parse_way: function(way){
-		if (Config.live || !Feature.ways.get(way.id)) {
+		if (Config.live || !Data.ways.get(way.id)) {
 			var data = {
 				id: way.id,
 				user: way.user,
@@ -180,7 +194,7 @@ var Importer = {
 			if (way.name) data.name = way.name
 			way.nd.each(function(nd, index) {
 				if ((index % Config.simplify) == 0 || index == 0 || index == way.nd.length-1 || way.nd.length <= Config.simplify*2)  {
-					node = Feature.nodes.get(nd.ref)
+					node = Data.nodes.get(nd.ref)
 					if (!Object.isUndefined(node)) data.nodes.push(node)
 				}
 			})
@@ -197,8 +211,9 @@ var Importer = {
 		}
 	},
 	/**
-	 * Parses feature data and creates Way and Node objects, registering them with
-	 * Geohash
+	 * Parses feature data and creates Way and Node objects, refreshes
+	 * coastlines, and stores everything in the Data object. Uses
+	 * TaskManager to do the parsing.
 	 * @param {Object} data OSM data to parse
 	 */
 	parse_objects: function(data, key) {
@@ -226,4 +241,4 @@ var Importer = {
 	}
 }
 
-document.observe('cartagen:init', Importer.init.bindAsEventListener(Importer))
+document.observe('cartagen:init', Importer.initialize.bindAsEventListener(Importer))

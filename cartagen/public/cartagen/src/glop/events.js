@@ -38,25 +38,43 @@ var Events = {
 		Event.observe(window, 'resize', Events.resize);
 	},
 	/**
-	 * Triggered when moused is moved on the canvas
+	 * Triggered when moused is moved on the canvas. Updates {@link Mouse}'s
+	 * fields and ensures hover styles are apllied.
+	 * 
 	 * @param {Event} event
 	 */
-	mousemove: function(event) { 
+	mousemove: function(event) {
+		// enable events -- this handles the case where the page was loaded and
+		// the mouse cursor was over the canvas, thus EEvents are not enabled by
+		// mouseover() as they normally would be.
 		Events.enabled = true
+		
+		// Update Mouse
 		Mouse.x = -1*Event.pointerX(event)
 		Mouse.y = -1*Event.pointerY(event)
+		
+		// grab features in current geohash and shorter geohashes and invoke
+		// their style() method so hover styles can be applied.
 		var lon = Projection.x_to_lon(-1*Map.pointer_x())
 		var lat = Projection.y_to_lat(Map.pointer_y())
 		var features = Data.get_current_features_upward(encodeGeoHash(lat, lon))
-		if (features) features.reverse().concat(Mouse.hovered_features).invoke('style')
+		
+		if (features)
+			features.reverse().concat(Mouse.hovered_features).invoke('style')
+			
+		// Trigger re-draw so hover styles can be rendered
 		Glop.trigger_draw(5)
 	},
 	/**
-	 * Triggered when canvas is clicked on
+	 * Triggered when canvas is clicked on. Updates {@link Mouse}'s fields and
+	 * ensures click styles are applied.
 	 * @param {Event} event
 	 */
 	mousedown: function(event) {
+		// only handle left click
 		if (!event.isLeftClick()) return
+		
+		// update Mouse and set _old properties of Map to track drags
         Mouse.down = true
         Mouse.click_frame = Glop.frame
         Mouse.click_x = Mouse.x
@@ -65,12 +83,15 @@ var Events = {
         Map.y_old = Map.y
         Map.rotate_old = Map.rotate
 		Mouse.dragging = true
+		
+		// trigger mousemove so click styles are applied
 		Events.mousemove(event)
-		// $l('mousedown')
+		
+		// Trigger re-draw so click styles are rendered
 		Glop.trigger_draw(5)
 	},
 	/**
-	 * Triggered when mouse is released on canvas
+	 * Triggered when mouse is released on canvas. Updates {@link Mouse}.
 	 */
 	mouseup: function(event) {
 		if (!event.isLeftClick()) return
@@ -81,11 +102,15 @@ var Events = {
         User.update()
 	},
 	/**
-	 * Triggered when the mouse wheel is used
+	 * Triggered when the mouse wheel is used. Zooms the map. Does nothing if
+	 * the mouse is not over the canvas
 	 * @param {Event} event
 	 */
 	wheel: function(event){
 		if (Events.enabled == false) return
+		
+		// get the amount of scroll
+		
 		var delta = 0
 		if (!event) event = window.event
 		if (event.wheelDelta) {
@@ -94,19 +119,20 @@ var Events = {
 		} else if (event.detail) {
 			delta = -event.detail/3
 		}
+		
+		// if we found the delta, and we're not currently using the live GSS
+		// editor, zoom the map
 		if (delta && !Config.live_gss) {
-			if (delta <0) {
-				Map.zoom = (Map.zoom * 1) + (delta/80)
-			} else {
-				Map.zoom = (Map.zoom * 1) + (delta/80)
-			}
-			if (Map.zoom < Config.zoom_out_limit) Map.zoom = Config.zoom_out_limit
+			Map.zoom += (delta/80)
+			Map.zoom = Math.min(Map.zoom, Config.zoom_out_limit)
 		}
 		Glop.trigger_draw(5)
 		event.preventDefault()
 	},
 	/**
-	 * Triggered when a key is pressed
+	 * Triggered when a key is pressed. Set modifiers (r and z), and
+	 * handles keyboard input if Keyboard.key_input (set by the config option
+	 * key_input) is set to true
 	 * @param {Event} e
 	 */
 	keypress: function(e) {
@@ -128,22 +154,21 @@ var Events = {
 				case "h": Map.x -= 20/Map.zoom; break
 				case "t": Map.y += 20/Map.zoom; break
 				case "g": Map.y -= 20/Map.zoom; break
-				case "x": localStorage.clear()
+				case "x": localStorage.clear(); break
+				case "b": Interface.download_bbox(); break
+				case "g": if (!Config.live_gss) Cartagen.show_gss_editor();break
 			}
 		} else {
 			// just modifiers:
 			switch(character){
 				case "r": Keyboard.keys.set("r",true); break
 				case "z": Keyboard.keys.set("z",true); break
-				case "g": if (!Config.live_gss) Cartagen.show_gss_editor(); break
-				case "h": get_static_plot('/static/rome/highway.js'); break
-				case "b": Interface.download_bbox()
 			}
 		}
 		Glop.trigger_draw(5)
 	},
 	/**
-	 * Triggered when a key is released
+	 * Triggered when a key is released. Sets keyboard modifiers to false.
 	 */
 	keyup: function(e) {
 		if (Events.enabled === false) return
@@ -152,7 +177,8 @@ var Events = {
 		Keyboard.keys.set("z",false)
 	},
 	/**
-	 * Triggered when a touch is started. Mainly for touchscreen mobile platforms
+	 * Triggered when a touch is started. Mainly for touchscreen mobile
+	 * platforms. Similar to {@link Events.mousedown}.
 	 * @param {Event} e
 	 */
 	ontouchstart: function(e){
@@ -172,7 +198,8 @@ var Events = {
 		  }
 	},
 	/**
-	 * Triggered when a touch is moved. Mainly for touchscreen mobile platforms
+	 * Triggered when a touch is moved. Mainly for touchscreen mobile platforms.
+	 * Similar to {@link Events.mousemove}.
 	 * @param {Event} e
 	 */
 	ontouchmove: function(e) {	
@@ -194,7 +221,8 @@ var Events = {
 		}
 	},
 	/**
-	 * Triggered when a touch is ended. Mainly for touchscreen mobile platforms
+	 * Triggered when a touch is ended. Mainly for touchscreen mobile platforms.
+	 * Similar to {@link Events.mouseup}
 	 * @param {Event} e
 	 */
 	ontouchend: function(e) {
@@ -208,14 +236,16 @@ var Events = {
 		Glop.trigger_draw(5)
 	},
 	/**
-	 * Triggered when a touch gesture is started. Mainly for touchscreen mobile platforms
+	 * Triggered when a touch gesture is started. Mainly for touchscreen mobile
+	 * platforms. Sets the starting zoom level for use with zoom gestures.
 	 * @param {Event} e
 	 */
 	ongesturestart: function(e) {
 		zoom_level_old = Map.zoom
 	},
 	/**
-	 * Triggered when a touch gesture is changed or moved. Mainly for touchscreen mobile platforms
+	 * Triggered when a touch gesture is changed or moved. Mainly for
+	 * touchscreen mobile platforms. Zooms and rotates according to the gesture.
 	 * @param {Event} e
 	 */
 	ongesturechange: function(e){
@@ -265,38 +295,36 @@ var Events = {
 	},
 	/**
 	 * Returns the number of frames a click has lasted for.
+	 * @type Number
 	 */
 	click_length: function() {
 		return Mouse.release_frame-Mouse.click_frame
 	},
+	/**
+	 * Triggered when the window is resized. Truggers a draw cycle so the
+	 * canvas can be re-rendered to take into account the new canvas size.
+	 */
 	resize: function() {
 		Glop.trigger_draw(5)
 	},
+	/**
+	 * Triggered when the mouse enters the canvas. Enables events.
+	 */
 	mouseover: function() {
 		Events.enabled = true
 	},
+	/**
+	 * Triggered when the mouse leaves the canvas. Disables events.
+	 */
 	mouseout: function() {
 		Events.enabled = false
 	}
 }
+
 // bind event
 document.observe('cartagen:init', Events.init)
 
 
 // not sure what this is:
 
-//if (Prototype.Browser.MobileSafari) {
-	// addEventListener("load", function() { setTimeout(updateLayout, 0) }, false)
-	// var currentWidth = 0;
-	// function updateLayout() {
-	//     if (window.innerWidth != currentWidth) {
-	//         currentWidth = window.innerWidth;
-	//         var orient = currentWidth == 320 ? "profile" : "landscape";
-	//         document.body.setAttribute("orient", orient);
-	//         setTimeout(function() {
-	//             window.scrollTo(0, 1);
-	//         }, 100);           
-	//     }
-	// }
-	// setInterval(updateLayout, 400);
-//}
+

@@ -1,10 +1,18 @@
 //= require "feature"
 
+/**
+ * @namespace Namespace for manageing all loaded features, indexed by Geohash.
+ *            Implements Prototype's Enumerable mixin.
+ */
 var Data = {}
 
 Object.extend(Data, Enumerable)
 
-Object.extend(Data, {
+Object.extend(Data, 
+/**
+ * @lends Data
+ */
+{
 	/**
 	 * Hash of node id => node
 	 * @type Hash (String -> Node[])
@@ -263,10 +271,13 @@ Object.extend(Data, {
 			this.current_features = features.concat(this.current_features)
 		}, this)
 		
-		this.sort_objects()
+		this.sort_current_features()
 		return this.current_features
 	},
-	sort_objects: function() {
+	/**
+	 * Sorts {@link Data.current_features} by area
+	 */
+	sort_current_features: function() {
 		this.current_features.sort(Geometry.sort_by_area)
 	},
 	/**

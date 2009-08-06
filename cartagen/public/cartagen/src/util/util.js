@@ -2,9 +2,6 @@
 //= require "debug"
 
 /**
- * @name Math.in_range
- * @function
- * @memberOf Math
  * Determines if a value is in a specified range. Order is not significant for the endpoints of
  * the range.
  * @param {Number} v  Value to test
@@ -34,7 +31,12 @@ Object.value = function(obj, context) {
     return obj
 }
 
-// based on jQuery.extend
+/**
+ * Same as Object.extend, but recursively merges arrays and objects. Based on
+ * JQuery's deep_extend.
+ * @param {Object} old_object    Object to extend
+ * @param {Object} new_object... Any number of objects to extend old_object with
+ */
 Object.deep_extend = function() {
     // copy reference to target object
     var target = arguments[0] || {}, i = 1, length = arguments.length, deep = true, options, name, src, copy;

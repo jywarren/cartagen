@@ -1,18 +1,23 @@
 /* cartagen.js
  *
- * Copyright (C) 2009 Jeffrey Warren, Design Ecology, MIT Media Lab
+ * Copyright (C) <%= COPYRIGHT_YEAR %> <%= AUTHOR %>
  *
  * This file is part of the Cartagen mapping framework. Read more at
- * <http://cartagen.org>
+ * <%= HOME_PAGE %>
  *
  * Cartagen is free software: you can redistribute it and/or modify
  * it under the terms of the MIT License. You should have received a copy
- * of the MIT License along with Cartagen.  If not, see
- * <http://www.opensource.org/licenses/mit-license.php>.
+ * of the MIT License along with Cartagen.  If not, see <%= LICENSE_URL %>.
+ * 
+ * This is a built version of Cartagen. It has no comments, and is the result
+ * of concatenating all of the Cartagen source files, as well as all required
+ * libraries, into a single file. Readable sources are in the src/ folder
+ * and the lib/ folder.
  */
  
-/* The following sections (until "BEGIN CARTAGEN") are not part of Cartagen. They are, however, 
- * also available under an MIT license.
+/* The following sections (until "BEGIN CARTAGEN") are not part of Cartagen.
+ * They are, however, also available under an MIT license. Each section should
+ * have its own license header.
  */
 
 /* **** BEGIN PROTOTYPE **** */
@@ -45,10 +50,11 @@
  * Array of all objects that should be drawn.
  * @type Feature[]
  * @deprecated
+ * @ignore
  */
 var objects = []
 
-// temp object unitl PhoneGap is initialized.
+// temp object until PhoneGap is initialized.
 PhoneGap = window.DeviceInfo && DeviceInfo.uuid != undefined
 
 if (typeof cartagen_base_uri == 'undefined') {
@@ -59,6 +65,7 @@ if (typeof cartagen_base_uri == 'undefined') {
 	 * is loaded if it needs to be changed.
 	 * 
 	 * @type String
+	 * @default "cartagen"
 	 */
     cartagen_base_uri = 'cartagen'
 }
@@ -66,11 +73,25 @@ if (typeof cartagen_base_uri == 'undefined') {
 // if (Prototype.Browser.MobileSafari) $('brief').hide()
 
 /**
- * @namespace
- * Namespace for methods and variables that manage Cartagen as a whole, i.e. loading
- * data and creating Nodes and Ways.
+ * @namespace Namespace for methods that manage Cartagen's draw sequence. Also
+ *            performs initialization of Cartagen.
  */
 var Cartagen = {
+	/**
+	 * Current version of Cartagen.
+	 * @constant
+	 * @type String
+	 */
+	version: "<%= VERSION %>",
+	/**
+	 * Date this copy of Cartagen was built
+	 * @constant
+	 * @type String
+	 */
+	build_date: "<%= BUILD_DATE %>",
+	/**
+	 * Cartagen version number
+	 */
 	/**
 	 * Queue of labels to draw
 	 * @type Label[]
@@ -102,7 +123,7 @@ var Cartagen = {
 	 * @param {Object} configs A set of key/value pairs that will be copied to the Cartagen object
 	 */
 	initialize: function(configs) {
-		Config.init(configs)
+		Config.initialize(configs)
 		
 		// load phonegap js if needed
 		if (window.PhoneGap) {
@@ -120,14 +141,6 @@ var Cartagen = {
 		
 		//if (Prototype.Browser.MobileSafari) window.scrollTo(0, 1) //get rid of url bar
 		
-		/**
-		 * @name Cartagen#cartagen:init
-		 * @event
-		 * Fired after Cartagen loads its configuration and the contents of 
-		 * Cartagen.scripts, but before any features are loaded or drawn.
-		 * Note that Cartagen.scripts are loaded asynchronously, so it is not
-		 * guarenteed that they will be finished loading.
-		 */
 		document.fire('cartagen:init')
 		
 		// bind event listeners
@@ -157,11 +170,6 @@ var Cartagen = {
 		
 		Glop.trigger_draw()
 		
-		/**
-		 * @name cartagen:postinit
-		 * @event
-		 * Fired after Caragen loads map data.
-		 */
 		document.fire('cartagen:postinit')
 	},
 	/**
@@ -187,11 +195,6 @@ var Cartagen = {
         
 		Viewport.draw() //adjust viewport
 		
-		/**
-		 *@name Cartagen#cartagen:predraw
-		 *Fires just before features are drawn
-		 *@event
-		 */
 		$('canvas').fire('cartagen:predraw')
 		
 		//Geohash lookup:
@@ -223,11 +226,6 @@ var Cartagen = {
 
 		this.label_queue = []
 
-		/**
-		 *@name Cartagen#cartagen:predraw
-		 *Fires just after labels are drawn
-		 *@event
-		 */
 		$('canvas').fire('cartagen:postdraw')
 		
 		// display percentage of features we've imported so far:

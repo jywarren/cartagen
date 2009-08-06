@@ -7,9 +7,12 @@
  * @namespace Misc. UI methods that do not related to user-submitted data
  */
 var Interface = {
+	/**
+	 * Displays a loading notification.
+	 * @param {Number} percent Percentage of task that has been done
+	 */
 	display_loading: function(percent) {
 		if (percent < 100) {
-			// $l('bar')
 			$C.save()
 	        $C.translate(Map.x,Map.y)
 			$C.rotate(-Map.rotate)
@@ -17,7 +20,8 @@ var Interface = {
 			$C.fill_style('white')
 			$C.line_width(0)
 			$C.opacity(0.7)
-			var x = Map.x-(1/Map.zoom*(Glop.width/2))+(40/Map.zoom), y = Map.y-(1/Map.zoom*(Glop.height/2))+(40/Map.zoom)
+			var x = Map.x-(1/Map.zoom*(Glop.width/2))+(40/Map.zoom)
+			var y = Map.y-(1/Map.zoom*(Glop.height/2))+(40/Map.zoom)
 			$C.begin_path()
 				$C.line_to(x,y)
 				$C.arc(x,y,24/Map.zoom,-Math.PI/2,Math.PI*2-Math.PI/2,false)
@@ -28,7 +32,8 @@ var Interface = {
 			$C.stroke_style('white')
 			$C.line_cap('square')
 			$C.begin_path()
-				$C.arc(x,y,27/Map.zoom,-Math.PI/2,Math.PI*2*(percent/100)-Math.PI/2,false)
+				$C.arc(x, y, 27/Map.zoom, -Math.PI/2,
+				       Math.PI*2*(percent/100)-Math.PI/2, false)
 			$C.stroke()
 			var width = $C.measure_text("Lucida Grande, sans-serif",
 			             12,
@@ -46,7 +51,8 @@ var Interface = {
 		}
 	},
 	/**
-	 * Prompts the user to select a bbox, then downloads that bbox
+	 * Prompts the user to select a bbox, then downloads that bbox. Tells user
+	 * which lat, lon, and zoom level to put into Cartagen.setup.
 	 */
 	download_bbox: function() {
 		Glop.paused = true
@@ -65,6 +71,11 @@ var Interface = {
 		Interface.bbox_select_active = true
 		Interface.bbox_select_dragging = false
 	},
+	/**
+	 * Mousemove callback during bbox selection. Re-draws the rectangle
+	 * indicating selected area.
+	 * @param {Event} e
+	 */
 	bbox_select_mousemove: function(e) {
 		if (Interface.bbox_select_active && Interface.bbox_select_dragging) {
 			var pointer_x = Map.x+(((Glop.width/-2)+Event.pointerX(e))/Map.zoom)
@@ -87,6 +98,10 @@ var Interface = {
 			$C.restore()
 		}
 	}.bindAsEventListener(Interface),
+	/**
+	 * Mousedown callack during bbox selection. Starts drawing the rectangle.
+	 * @param {Object} e
+	 */
 	bbox_select_mousedown: function(e) {
 		if (Interface.bbox_select_active && !Interface.bbox_select_dragging) {
 			var pointer_x = Map.x+(((Glop.width/-2)+Event.pointerX(e))/Map.zoom)
@@ -97,6 +112,10 @@ var Interface = {
 			Interface.bbox_select_end = Interface.bbox_select_start
 		}
 	}.bindAsEventListener(Interface),
+	/**
+	 * Mouseup callback during bbox selection. Initiates bbox download and
+	 * notifies user of proper Cartagen.setup values.
+	 */
 	bbox_select_mouseup: function() {
 		if (Interface.bbox_select_active && Interface.bbox_select_dragging) {
 			Glop.paused = false
