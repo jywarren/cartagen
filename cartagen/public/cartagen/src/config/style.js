@@ -249,6 +249,7 @@ var Style = {
 			Data.each(function(o) {
 				o.refresh_styles()
 			})
+			Glop.trigger_draw()
 		}
 	}
 }

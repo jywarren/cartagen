@@ -123,7 +123,7 @@ parkchange: {
 },
 building: {
 	opacity: 1,
-	lineWidth: 0.001,
+	lineWidth: 0,
 	fillStyle: "#444",
 	text: function() { return this.tags.get('name') },
 	hover: {

@@ -4988,7 +4988,7 @@ if (typeof cartagen_base_uri == 'undefined') {
 
 var Cartagen = {
 	version: "subversion",
-	build_date: "2009-08-07T14:46:38-04:00",
+	build_date: "2009-08-07T15:01:39-04:00",
 	label_queue: [],
 	feature_queue: [],
 	scripts: [],
@@ -5633,6 +5633,7 @@ var Style = {
 			Data.each(function(o) {
 				o.refresh_styles()
 			})
+			Glop.trigger_draw()
 		}
 	}
 }
@@ -7157,10 +7158,12 @@ $C = {
 	},
 
 	line_width: function(lineWidth){
-		if (parseInt(lineWidth) == 0)
+		if (parseInt(lineWidth) == 0) {
 			$C.canvas.lineWidth = 0.000000001
-		else
+		}
+		else {
 			$C.canvas.lineWidth = lineWidth
+		}
 	},
 
 	begin_path: function(){
