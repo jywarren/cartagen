@@ -285,9 +285,9 @@ var Cartagen = {
 		})
 	},
 	/**
-	 * Shows the live GSS editor. Generally only for cartgen.org.
+	 * Toggles the live GSS editor. Generally only for cartgen.org.
 	 */
-	show_gss_editor: function() {
+	toggle_gss_editor: function() {
 		$('description').hide()
 		$('brief').style.width = '28%'
 		$('brief_first').style.width = '92%';

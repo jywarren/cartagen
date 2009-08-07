@@ -284,7 +284,7 @@ Object.extend(Data,
 	 * Iterator for prototype.
 	 */
 	_each: function(f) {
-		this.hash.each(function(pair) {
+		this.geohash_index.each(function(pair) {
 			pair.value.each(function(val) { f(val) })
 		})
 	}

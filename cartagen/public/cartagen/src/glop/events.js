@@ -107,6 +107,7 @@ var Events = {
 	 * @param {Event} event
 	 */
 	wheel: function(event){
+		try {
 		if (Events.enabled == false) return
 		
 		// get the amount of scroll
@@ -122,12 +123,13 @@ var Events = {
 		
 		// if we found the delta, and we're not currently using the live GSS
 		// editor, zoom the map
-		if (delta && !Config.live_gss) {
+		if (delta) {
 			Map.zoom += (delta/80)
-			Map.zoom = Math.min(Map.zoom, Config.zoom_out_limit)
+			Map.zoom = Math.max(Map.zoom, Config.zoom_out_limit)
 		}
 		Glop.trigger_draw(5)
 		event.preventDefault()
+		} catch(e) {$l(e)}
 	},
 	/**
 	 * Triggered when a key is pressed. Set modifiers (r and z), and
@@ -156,7 +158,7 @@ var Events = {
 				case "g": Map.y -= 20/Map.zoom; break
 				case "x": localStorage.clear(); break
 				case "b": Interface.download_bbox(); break
-				case "g": if (!Config.live_gss) Cartagen.show_gss_editor();break
+				case "g": if (!Config.live_gss) Cartagen.toggle_gss_editor();break
 			}
 		} else {
 			// just modifiers:

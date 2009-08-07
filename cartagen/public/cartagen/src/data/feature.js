@@ -108,7 +108,6 @@ var Feature = Class.create(
 		this.opacity = 1
 		this.strokeStyle = 'black'
 		this.lineWidth = 6
-		this.menu = []
 		this.pattern = null
 		this.outlineColor = null
 		this.outlineWidth = null

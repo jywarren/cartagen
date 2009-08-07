@@ -250,6 +250,7 @@ var Way = Class.create(Feature,
 		$super()
 		this.outline_color = null
 		this.outline_width = 0
+		this.menu = []
 	},
 	/**
 	 * Applies default styles, then re-applies styles from GSS.

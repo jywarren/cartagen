@@ -79,6 +79,14 @@ var ContextMenu = {
 			label: name,
 			callback: callback,
 		})
+	},
+	/**
+	 * Removes all items from the menu.
+	 */
+	clear: function() {
+		this.menu.destroy()
+		this.cond_items = {}
+		this.init()
 	}
 }
 

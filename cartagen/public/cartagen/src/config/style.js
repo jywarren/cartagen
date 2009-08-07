@@ -203,6 +203,11 @@ var Style = {
 	 */
 	apply_gss: function(gss_string, force_update) {
 		$l('applying gss')
+		
+		if (force_update) {
+			ContextMenu.clear()
+		}
+		
 		var styles = ("{"+gss_string+"}").evalJSON()
 		
 		if (styles.debug) {

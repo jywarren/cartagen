@@ -3,7 +3,7 @@ body: {
 	lineWidth: 0,
 	pattern: "images/brown-paper.jpg",
 	menu: {
-		"Edit GSS": Cartagen.show_gss_editor,
+		"Edit GSS": Cartagen.toggle_gss_editor,
 		"Download Image": Cartagen.redirect_to_image,
 		"Download Data": Interface.download_bbox
 	}
