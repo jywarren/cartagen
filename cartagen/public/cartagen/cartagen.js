@@ -4988,7 +4988,7 @@ if (typeof cartagen_base_uri == 'undefined') {
 
 var Cartagen = {
 	version: "subversion",
-	build_date: "2009-08-07T15:01:39-04:00",
+	build_date: "2009-08-15T15:43:18-04:00",
 	label_queue: [],
 	feature_queue: [],
 	scripts: [],
@@ -8139,8 +8139,10 @@ var Viewport = {
 	draw: function() {
 		Viewport.width = Glop.width * (1 / Map.zoom) - (2 * Viewport.padding * (1 / Map.zoom))
         Viewport.height = Glop.height * (1 / Map.zoom) - (2 * Viewport.padding * (1 / Map.zoom))
-        Viewport.width = Math.sqrt(Math.pow(Math.max(Viewport.width, Viewport.height),2)*2)
-        Viewport.height = Viewport.width
+        if (Map.rotate != 0) {
+			Viewport.width = Math.sqrt(Math.pow(Math.max(Viewport.width, Viewport.height),2)*2)
+	   		Viewport.height = Viewport.width
+		}
         Viewport.bbox = [Map.y - Viewport.height / 2, Map.x - Viewport.width / 2, Map.y + Viewport.height / 2, Map.x + Viewport.width / 2]
 	}
 }
