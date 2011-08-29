@@ -12,13 +12,14 @@ Tool.Mask = {
 	 */
 	current_poly: null,
 	drag: function() {
-		$l('Mask dragging')
 	},
 	activate: function() {
 		Tool.hide_tooltip()
+		Tool.add_toolbar("tool_specific")
+		Tool.add_tool_specific_button("mask_lock",Tool.Mask.mask_lock,"Lock this image with its mask","/images/silk-grey/lock.png","first silk")
 	},
 	deactivate: function() {
-		$l('Mask deactivated')
+		Tool.remove_toolbar("tool_specific")
 	},
 
 	mousedown: function() {
@@ -39,10 +40,8 @@ Tool.Mask = {
 	}.bindAsEventListener(Tool.Mask),
 
 	mouseup: function() {
-		$l('Mask mouseup')
 	}.bindAsEventListener(Tool.Mask),
 	mousemove: function() {
-		$l('Mask mousemove')
 	}.bindAsEventListener(Tool.Mask),
 
 	dblclick: function() {
@@ -58,18 +57,6 @@ Tool.Mask = {
 		Tool.Mask.mode='draw'
 		Tool.Mask.warpable.mask = new Tool.Mask.Shape([],Tool.Mask.warpable)	
 	},
-	/**
-	 * A function to generate an array of coordinate pairs as in [lat,lon] for the mask points
-	 */
-	coordinates: function() {
-		coordinates = []
-		this.points.each(function(point) {
-			var lon = Projection.x_to_lon(-point.x)
-			var lat = Projection.y_to_lat(point.y)
-			coordinates.push([lon,lat])
-		})
-		return coordinates
-	},
 
 	Shape: Class.create({
 		initialize: function(nodes,parent_image) {
@@ -83,8 +70,20 @@ Tool.Mask = {
 			Glop.observe('mousedown', this.mousedown.bindAsEventListener(this))
 			Glop.observe('mouseup', this.mouseup.bindAsEventListener(this))
 		},
+		/**
+		 * A function to generate an array of coordinate pairs as in [lat,lon] for the mask points
+		 */
+		coordinates: function() {
+			coordinates = []
+			this.points.each(function(point) {
+				var lon = Projection.x_to_lon(-point.x)
+				var lat = Projection.y_to_lat(point.y)
+				coordinates.push([lon,lat])
+			})
+			return coordinates
+		},
 		new_point: function(x,y) {
-			this.points.push(new Tool.Mask.ControlPoint(x, y, 6/Map.zoom, this))
+			this.points.push(new Tool.Mask.ControlPoint(x, y, 6, this))
 		},
 		mouse_inside: function(){
 			//if (Geome6try.is_point_in_poly(this.points, Map.pointer_x(), Map.pointer_y())){
@@ -161,13 +160,12 @@ Tool.Mask = {
 				if (this.active) $C.line_width(2/Map.zoom)
 				else $C.line_width(0)
 				$C.begin_path()
-				if (this.points.length>0){
+				if (this.points.length > 0) {
 					$C.move_to(this.points[0].x, this.points[0].y)		
 					this.points.each(function(point) {
 						$C.line_to(point.x, point.y)
 					})			
 					$C.line_to(this.points[0].x, this.points[0].y)
-
 				}
 				$C.opacity(0.4)
 				$C.stroke()
@@ -180,20 +178,17 @@ Tool.Mask = {
 		initialize: function(x,y,r,parent_shape) {
 			this.x = x
 			this.y = y
-			this.r = r
+			this.r = r 
 			this.parent_shape = parent_shape
 			this.color = '#200'
 			this.dragging = false
 			Glop.observe('glop:postdraw', this.draw.bindAsEventListener(this))
 			Glop.observe('mousedown', this.click.bindAsEventListener(this))
 		},
-		// this gets called every frame:
 		draw: function() {
-			// transform to 1:1 scale pixelwise (the map is not at this scale by default)
-			// first, save the transformation matrix:
 			if (this.parent_shape.parent_image.active) {
 				$C.save()
-					$C.line_width(2/Map.zoom)
+					$C.line_width(3/Map.zoom)
 					// go to the object's location:
 					$C.translate(this.x,this.y)
 					// draw the object:
@@ -207,11 +202,10 @@ Tool.Mask = {
 						$C.line_to(6/Map.zoom,-6/Map.zoom)
 						$C.stroke()
 					} else {
-						if (this.mouse_inside()) $C.circ(0, 0, this.r)
-						$C.stroke_circ(0, 0, 6)//this.r)
+						if (this.mouse_inside()) $C.circ(0, 0, this.r/Map.zoom) 
+						$C.stroke_circ(0, 0, this.r/Map.zoom)
 					}
 				$C.restore()
-
 			}
 			
 			/*var nodestring = ''
@@ -222,16 +216,13 @@ Tool.Mask = {
 			if (this.dragging && Mouse.down) {
 				//Tool.change('Warp')
 				this.drag()
-			} 
-			else if (this.mouse_inside()) {
+			} else if (this.mouse_inside()) {
 				if (Mouse.down) {
 					this.drag()
-				}
-				else {
+				} else {
 					this.hover()
 				}
-			}
-			else {
+			} else {
 				this.base()
 			}
 		},

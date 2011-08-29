@@ -153,7 +153,6 @@ var Glop = {
 	resize: function(custom_size) {
 		if (!custom_size) { // see Canvas.to_print_data_url()
 			Glop.changed_size = (Glop.width != document.viewport.getWidth() || Glop.height != document.viewport.getHeight()-Config.padding_top)
-			$l(Glop.changed_size)
 			Glop.width = document.viewport.getWidth()
 			Glop.height = document.viewport.getHeight()-Config.padding_top
 		}
@@ -161,7 +160,6 @@ var Glop = {
 			if ($C.freezer.get(canvas.key) != true || Glop.changed_size) {
 			// we miss the initial draw before freezing
 			// if ($(canvas.key).width != Glop.width || $(canvas.key).height != Glop.height) {
-				// $l()
 				$(canvas.key).width = Glop.width
 				$(canvas.key).height = Glop.height
 			}
@@ -203,8 +201,7 @@ var Glop = {
 			Glop.frame += 1
 		} else {
 			Glop.times = []
-		} //else $l('powersave: '+this.tail)
-		// $l('tail:'+this.tail)
+		}
 		Glop.date = new Date
 	}
 }

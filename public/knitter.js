@@ -75,13 +75,13 @@ var Knitter = {
 		// http://isse.cr.usgs.gov/ArcGIS/services/Combined/TNM_Large_Scale_Imagery/MapServer/WMSServer?request=GetCapabilities&service=WMS
 		// http://raster.nationalmap.gov/ArcGIS/rest/services/Combined/TNM_Large_Scale_Imagery/MapServer
 		// http://viewer.nationalmap.gov/example/services.html
-		Config.tiles = true
+		if (layer != "none") Config.tiles = true
 		Config.tile_type = layer
 		Zoom.interval = 6 
-		if (layer == 'google') {
+		if (layer == 'google' && typeof G_SATELLITE_MAP != "undefined") {
 			var gsat = new OpenLayers.Layer.Google("Google Satellite", {type: G_SATELLITE_MAP, sphericalMercator: true, numZoomLevels: 20} );
 			map.addLayer(gsat)
-		} else if (layer == 'yahoo') {
+		} else if (layer == 'yahoo' && typeof YAHOO_MAP_SAT != "undefined") {
 			var yahoosat = new OpenLayers.Layer.Yahoo("Yahoo Satellite", {type: YAHOO_MAP_SAT, sphericalMercator: true, numZoomLevels: 20});
 			map.addLayer(yahoosat)
 		} else if (layer == 'TMS') {
@@ -110,29 +110,37 @@ var Knitter = {
 				//layers:'DOQ'
 				//layers:'osm'
 			}))
+		} else if (layer == 'none') {
+			$l('removing other layers')
+			map.layers.each(function(layer) {
+				map.removeLayer(layer)
+			},this)
 		}
 
 		Glop.observe('glop:draw',function(){$('map').setStyle({height:Glop.height+'px'})})
 		if (Config.tile_type == 'WMS') Glop.observe('mouseup',function() {map.layers.first().refresh()})
 
-		var lat1 = Projection.y_to_lat(Map.y-Glop.height/2)
-		var lon1 = Projection.x_to_lon(Map.x-Glop.width/2)
-		var lat2 = Projection.y_to_lat(Map.y+Glop.height/2)
-		var lon2 = Projection.x_to_lon(Map.x+Glop.width/2)
-
-		var bounds = new OpenLayers.Bounds();
-		bounds.extend(new OpenLayers.LonLat(lon1,lat1))//.transform(spher_merc,latlon))
-		bounds.extend(new OpenLayers.LonLat(lon2,lat2))//.transform(spher_merc,latlon))
-
-		map.zoomToExtent( bounds )
-		if (Config.tile_switcher) {
-	         	var switcherControl = new OpenLayers.Control.LayerSwitcher()
-			map.addControl(switcherControl);
-	                switcherControl.maximizeControl();
+		if (layer != "none") {
+			$l('adjusting extent')
+			var lat1 = Projection.y_to_lat(Map.y-Glop.height/2)
+			var lon1 = Projection.x_to_lon(Map.x-Glop.width/2)
+			var lat2 = Projection.y_to_lat(Map.y+Glop.height/2)
+			var lon2 = Projection.x_to_lon(Map.x+Glop.width/2)
+	
+			var bounds = new OpenLayers.Bounds();
+			bounds.extend(new OpenLayers.LonLat(lon1,lat1))//.transform(spher_merc,latlon))
+			bounds.extend(new OpenLayers.LonLat(lon2,lat2))//.transform(spher_merc,latlon))
+	
+			map.zoomToExtent( bounds )
+			if (Config.tile_switcher) {
+	        	 	var switcherControl = new OpenLayers.Control.LayerSwitcher()
+				map.addControl(switcherControl);
+	        	        switcherControl.maximizeControl();
+			}
+			Knitter.openLayersDraw()
+			Glop.observe('glop:draw', Knitter.openLayersDraw)
 		}
-		Knitter.openLayersDraw()
-		Glop.observe('glop:draw', Knitter.openLayersDraw)
-			
+
 		Knitter.save.submitted()
 		new Ajax.Request('/map/update/'+Knitter.map_id,{
 			method: 'get',

@@ -5,6 +5,8 @@
 <p><a href="javascript:void(0);" onClick="Knitter.start_openlayers('google');Modalbox.hide();">Google Maps layer</a></p>
 <p><a href="javascript:void(0);" onClick="Knitter.start_openlayers('TMS');Modalbox.hide();">TMS layer (enter a URL)</a></p>
 <p><a href="javascript:void(0);" onClick="Knitter.start_openlayers('WMS');Modalbox.hide();">WMS layer (enter a URL)</a></p>
-<p><a href="javascript:void(0);" onClick="Knitter.start_openlayers('none');Modalbox.hide();">no tile background layer</a></p>
+<p><a href="javascript:void(0);" onClick="Knitter.openlayers_on = false;Knitter.start_openlayers('none');Modalbox.hide();">no tile background layer</a></p>
+
+TMS and WMS may not be stable at this time. Contact jeff@unterbahn.com for assistance. You may need to reload the page after changing the background layer.
 
 <a href="javascript:void(0);" onClick="Modalbox.hide();" >cancel</a>
