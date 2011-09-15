@@ -4,23 +4,25 @@ class MapController < ApplicationController
   protect_from_forgery :except => :formats
 
   def index
-    @maps = Map.find :all, :order => 'updated_at DESC', :limit => 25
-    respond_to do |format|
-      format.html {  }
-      format.xml  { render :xml => @maps }
-      format.json  { render :json => @maps }
-    end
+    redirect_to "http://mapknitter.org"
+#    @maps = Map.find :all, :order => 'updated_at DESC', :limit => 25
+#    respond_to do |format|
+#      format.html {  }
+#      format.xml  { render :xml => @maps }
+#      format.json  { render :json => @maps }
+#    end
   end
 
   def edit
-    @map = Map.find_by_name params[:id]
-    @export = Export.find_by_map_id(@map.id)
-    if @map.password != "" && !Password::check(params[:password],@map.password) 
-      flash[:error] = "That password is incorrect." if params[:password] != nil
-      redirect_to "/map/login/"+params[:id]+"?to=/map/edit/"+params[:id]
-    else
-      @images = Warpable.find_all_by_map_id(@map.id,:conditions => ['parent_id IS NULL AND deleted = false'])
-    end
+    redirect_to "http://mapknitter.org/maps/edit/"+params[:id]
+#    @map = Map.find_by_name params[:id]
+#    @export = Export.find_by_map_id(@map.id)
+#    if @map.password != "" && !Password::check(params[:password],@map.password) 
+#      flash[:error] = "That password is incorrect." if params[:password] != nil
+#      redirect_to "/map/login/"+params[:id]+"?to=/map/edit/"+params[:id]
+#    else
+#      @images = Warpable.find_all_by_map_id(@map.id,:conditions => ['parent_id IS NULL AND deleted = false'])
+#    end
   end
 
   # pt fm ac wpw
@@ -126,38 +128,39 @@ class MapController < ApplicationController
 
   # http://www.zacharyfox.com/blog/ruby-on-rails/password-hashing 
   def show
-    @map = Map.find_by_name(params[:id],:order => 'version DESC')
-    if @map.password != "" && !Password::check(params[:password],@map.password) 
-      flash[:error] = "That password is incorrect." if params[:password] != nil
-      redirect_to "/map/login/"+params[:id]+"?to=/maps/"+params[:id]
-    else
-    @map.zoom = 1.6 if @map.zoom == 0
-    @warpables = Warpable.find :all, :conditions => {:map_id => @map.id, :deleted => false} 
-    @nodes = {}
-    @warpables.each do |warpable|
-      if warpable.nodes != ''
-        nodes = []
-        warpable.nodes.split(',').each do |node|
-          node_obj = Node.find(node)
-          nodes << [node_obj.lon,node_obj.lat]
-        end
-        @nodes[warpable.id.to_s] = nodes
-      elsif (warpable.nodes == "" && warpable.created_at == warpable.updated_at)
-	# delete warpables which have not been placed and are older than 1 hour:
-	warpable.delete if DateTime.now-1.hour > warpable.created_at
-      end
-      @nodes[warpable.id.to_s] ||= 'none'
-    end
-    if !@warpables || @warpables && @warpables.length == 1 && @warpables.first.nodes == "none"
-      location = GeoKit::GeoLoc.geocode(@map.location)
-      @map.lat = location.lat
-      @map.lon = location.lng
-	puts @map.lat
-	puts @map.lon
-      @map.save
-    end
-    render :layout => false
-    end
+    redirect_to "http://mapknitter.org/maps/"+params[:id]
+#    @map = Map.find_by_name(params[:id],:order => 'version DESC')
+#    if @map.password != "" && !Password::check(params[:password],@map.password) 
+#      flash[:error] = "That password is incorrect." if params[:password] != nil
+#      redirect_to "/map/login/"+params[:id]+"?to=/maps/"+params[:id]
+#    else
+#    @map.zoom = 1.6 if @map.zoom == 0
+#    @warpables = Warpable.find :all, :conditions => {:map_id => @map.id, :deleted => false} 
+#    @nodes = {}
+#    @warpables.each do |warpable|
+#      if warpable.nodes != ''
+#        nodes = []
+#        warpable.nodes.split(',').each do |node|
+#          node_obj = Node.find(node)
+#          nodes << [node_obj.lon,node_obj.lat]
+#        end
+#        @nodes[warpable.id.to_s] = nodes
+#      elsif (warpable.nodes == "" && warpable.created_at == warpable.updated_at)
+#	# delete warpables which have not been placed and are older than 1 hour:
+#	warpable.delete if DateTime.now-1.hour > warpable.created_at
+#      end
+#      @nodes[warpable.id.to_s] ||= 'none'
+#    end
+#    if !@warpables || @warpables && @warpables.length == 1 && @warpables.first.nodes == "none"
+#      location = GeoKit::GeoLoc.geocode(@map.location)
+#      @map.lat = location.lat
+#      @map.lon = location.lng
+#	puts @map.lat
+#	puts @map.lon
+#      @map.save
+#    end
+#    render :layout => false
+#    end
   end
 
   def search
