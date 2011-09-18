@@ -27,22 +27,23 @@ class MapController < ApplicationController
 
   # pt fm ac wpw
   def images
-    @map = Map.find_by_name params[:id]
-    @images = Warpable.find_all_by_map_id(@map.id,:conditions => ['parent_id IS NULL AND deleted = false'])
-    @image_locations = []
-    if @images
-      @images.each do |image|
-        if image.nodes != ''
-          node = image.nodes.split(',').first
-          node_obj = Node.find(node)
-          @image_locations << [node_obj.lon,node_obj.lat]
-        else
-        end
-      end
-      render :layout => false
-    else
-      render :text => "<h2>There are no images in this map.</h2>"
-    end
+    redirect_to "http://mapknitter.org"
+#    @map = Map.find_by_name params[:id]
+#    @images = Warpable.find_all_by_map_id(@map.id,:conditions => ['parent_id IS NULL AND deleted = false'])
+#    @image_locations = []
+#    if @images
+#      @images.each do |image|
+#        if image.nodes != ''
+#          node = image.nodes.split(',').first
+#          node_obj = Node.find(node)
+#          @image_locations << [node_obj.lon,node_obj.lat]
+#        else
+#        end
+#      end
+#      render :layout => false
+#    else
+#      render :text => "<h2>There are no images in this map.</h2>"
+#    end
   end
 
   # just a template pointer... maybe uneccessary
@@ -69,58 +70,60 @@ class MapController < ApplicationController
   end
 
   def update_map
-    @map = Map.find(params[:map][:id])
-    if @map.password != "" && !Password::check(params[:password],@map.password) 
-      flash[:error] = "That password is incorrect." if params[:password] != nil
-      redirect_to "/map/login/"+params[:id]+"?to=/map/edit/"+params[:id]
-    else
-      @map.update_attributes(params[:map])
-      @map.author = params[:map][:author]
-      @map.description = params[:map][:description]
-  	location = GeoKit::GeoLoc.geocode(params[:map][:location])
-      @map.lat = location.lat
-      @map.lon = location.lng
-      @map.password = Password.update(params[:map][:password]) if @map.password != "" && @map.password != "*****"
-      @map.save
-      redirect_to '/map/edit/'+@map.name
-    end
+    redirect_to "http://mapknitter.org"
+#    @map = Map.find(params[:map][:id])
+#    if @map.password != "" && !Password::check(params[:password],@map.password) 
+#      flash[:error] = "That password is incorrect." if params[:password] != nil
+#      redirect_to "/map/login/"+params[:id]+"?to=/map/edit/"+params[:id]
+#    else
+#      @map.update_attributes(params[:map])
+#      @map.author = params[:map][:author]
+#      @map.description = params[:map][:description]
+#  	location = GeoKit::GeoLoc.geocode(params[:map][:location])
+#      @map.lat = location.lat
+#      @map.lon = location.lng
+#      @map.password = Password.update(params[:map][:password]) if @map.password != "" && @map.password != "*****"
+#      @map.save
+#      redirect_to '/map/edit/'+@map.name
+#    end
   end
 
   def create
-    if params[:location] == ''
-      @map = Map.new
-      @map.errors.add :location, 'You must name a location. You may also enter a latitude and longitude instead.'
-      index
-      render :action=>"index", :controller=>"map"
-    else
-      if params[:latitude] == '' && params[:longitude] == ''
-	location = ''
-	puts 'geocoding'
-        begin
-          location = GeoKit::GeoLoc.geocode(params[:location])
-	  @map = Map.new({:lat => location.lat,
-            :lon => location.lng,
-            :name => params[:name],
-            :location => params[:location]})
-        rescue
-	  @map = Map.new({
-            :name => params[:name]})
-	end
-      else
-	puts 'nogeocoding'
-        @map = Map.new({:lat => params[:latitude],
-            :lon => params[:longitude],
-            :name => params[:name],
-            :location => params[:location]})
-      end
-      if verify_recaptcha(:model => @map, :message => "ReCAPTCHA thinks you're not a human!") && @map.save
-      #if @map.save
-        redirect_to :action => 'show', :id => @map.name
-      else
-	index
-        render :action=>"index", :controller=>"map"
-      end
-    end
+    redirect_to "http://mapknitter.org"
+#    if params[:location] == ''
+#      @map = Map.new
+#      @map.errors.add :location, 'You must name a location. You may also enter a latitude and longitude instead.'
+#      index
+#      render :action=>"index", :controller=>"map"
+#    else
+#      if params[:latitude] == '' && params[:longitude] == ''
+#	location = ''
+#	puts 'geocoding'
+#        begin
+#          location = GeoKit::GeoLoc.geocode(params[:location])
+#	  @map = Map.new({:lat => location.lat,
+#            :lon => location.lng,
+#            :name => params[:name],
+#            :location => params[:location]})
+#        rescue
+#	  @map = Map.new({
+#            :name => params[:name]})
+#	end
+#      else
+#	puts 'nogeocoding'
+#        @map = Map.new({:lat => params[:latitude],
+#            :lon => params[:longitude],
+#            :name => params[:name],
+#            :location => params[:location]})
+#      end
+#      if verify_recaptcha(:model => @map, :message => "ReCAPTCHA thinks you're not a human!") && @map.save
+#      #if @map.save
+#        redirect_to :action => 'show', :id => @map.name
+#      else
+#	index
+#        render :action=>"index", :controller=>"map"
+#      end
+#    end
   end
  
   def login
@@ -271,19 +274,21 @@ class MapController < ApplicationController
   end
 
   def formats
-	@map = Map.find params[:id] 
-	@export = Export.find_by_map_id(params[:id])
-	render :layout => false
+    redirect_to "http://mapknitter.org"
+#	@map = Map.find params[:id] 
+#	@export = Export.find_by_map_id(params[:id])
+#	render :layout => false
   end
 
   def output
-	@map = Map.find params[:id] 
-	if @export = Export.find_by_map_id(params[:id])
-		@running = (@export.status != 'complete' && @export.status != 'none' && @export.status != 'failed')
-	else
-		@running = false
-	end
-	render :layout => false
+    redirect_to "http://mapknitter.org"
+#	@map = Map.find params[:id] 
+#	if @export = Export.find_by_map_id(params[:id])
+#		@running = (@export.status != 'complete' && @export.status != 'none' && @export.status != 'failed')
+#	else
+#		@running = false
+#	end
+#	render :layout => false
   end
 
   def layers
@@ -298,91 +303,93 @@ class MapController < ApplicationController
   end
 
   def progress
-	if export = Export.find_by_map_id(params[:id])
-		if  export.status == 'complete'
-			output = 'complete'
-		elsif export.status == 'none'
-			output = 'export has not been run'
-		elsif export.status == 'failed'
-			output = 'export failed'
-		else
-			output = ' <img class="export_status" src="/images/spinner-small.gif">'+ export.status
-		end
-	else
-		output = 'export has not been run'
-	end
-	render :text => output, :layout => false 
+    redirect_to "http://mapknitter.org"
+#	if export = Export.find_by_map_id(params[:id])
+#		if  export.status == 'complete'
+#			output = 'complete'
+#		elsif export.status == 'none'
+#			output = 'export has not been run'
+#		elsif export.status == 'failed'
+#			output = 'export failed'
+#		else
+#			output = ' <img class="export_status" src="/images/spinner-small.gif">'+ export.status
+#		end
+#	else
+#		output = 'export has not been run'
+#	end
+#	render :text => output, :layout => false 
   end
 
   def export
-	map = Map.find_by_name params[:id]
-	begin
-		unless export = Export.find_by_map_id(map.id)
-			export = Export.new({:map_id => map.id,:status => 'starting'})
-		end
-		export.status = 'starting'
-		export.tms = false
-		export.geotiff = false
-		export.jpg = false
-		export.save       
-
-		directory = RAILS_ROOT+"/public/warps/"+map.name+"/"
-		stdin, stdout, stderr = Open3.popen3('rm -r '+directory)
-		puts stdout.readlines
-		puts stderr.readlines
-		stdin, stdout, stderr = Open3.popen3('rm -r '+RAILS_ROOT+'/public/tms/'+map.name)
-		puts stdout.readlines
-		puts stderr.readlines
-	
-		puts '> averaging scales'
-		pxperm = map.average_scale # pixels per meter
-	
-		puts '> distorting warpables'
-		origin = map.distort_warpables(pxperm)
-		warpable_coords = origin.pop	
-
-		export = Export.find_by_map_id(map.id)
-		export.status = 'compositing'
-		export.save
-	
-		puts '> generating composite tiff'
-		geotiff_location = map.generate_composite_tiff(warpable_coords,origin)
-	
-		info = (`identify -quiet -format '%b,%w,%h' #{geotiff_location}`).split(',')
-		puts info
-		#stdin, stdout, stderr = Open3.popen3("identify -quiet -format '%b,%w,%h' #{geotiff_location}")
-		#puts stderr.readlines
-		#info = stdout.readlines.split(',') 
-	
-		export = Export.find_by_map_id(map.id)
-		if info[0] != ''
-			export.geotiff = true
-			export.size = info[0]
-			export.width = info[1]
-			export.height = info[2]
-			export.cm_per_pixel = 100.0000/pxperm
-			export.status = 'tiling'
-			export.save
-		end
-	
-		puts '> generating tiles'
-		export = Export.find_by_map_id(map.id)
-		export.tms = true if map.generate_tiles
-		export.status = 'creating jpg'
-		export.save
-
-		puts '> generating jpg'
-		export = Export.find_by_map_id(map.id)
-		export.jpg = true if map.generate_jpg
-		export.status = 'complete'
-		export.save
-	
-	rescue SystemCallError
-  	#	$stderr.print "failed: " + $!
-		export = Export.find_by_map_id(map.id)
-		export.status = 'failed'
-		export.save
-	end
-        render :text => "new Ajax.Updater('formats','/map/formats/#{map.id}')"
+    redirect_to "http://mapknitter.org"
+#	map = Map.find_by_name params[:id]
+#	begin
+#		unless export = Export.find_by_map_id(map.id)
+#			export = Export.new({:map_id => map.id,:status => 'starting'})
+#		end
+#		export.status = 'starting'
+#		export.tms = false
+#		export.geotiff = false
+#		export.jpg = false
+#		export.save       
+#
+#		directory = RAILS_ROOT+"/public/warps/"+map.name+"/"
+#		stdin, stdout, stderr = Open3.popen3('rm -r '+directory)
+#		puts stdout.readlines
+#		puts stderr.readlines
+#		stdin, stdout, stderr = Open3.popen3('rm -r '+RAILS_ROOT+'/public/tms/'+map.name)
+#		puts stdout.readlines
+#		puts stderr.readlines
+#	
+#		puts '> averaging scales'
+#		pxperm = map.average_scale # pixels per meter
+#	
+#		puts '> distorting warpables'
+#		origin = map.distort_warpables(pxperm)
+#		warpable_coords = origin.pop	
+#
+#		export = Export.find_by_map_id(map.id)
+#		export.status = 'compositing'
+#		export.save
+#	
+#		puts '> generating composite tiff'
+#		geotiff_location = map.generate_composite_tiff(warpable_coords,origin)
+#	
+#		info = (`identify -quiet -format '%b,%w,%h' #{geotiff_location}`).split(',')
+#		puts info
+#		#stdin, stdout, stderr = Open3.popen3("identify -quiet -format '%b,%w,%h' #{geotiff_location}")
+#		#puts stderr.readlines
+#		#info = stdout.readlines.split(',') 
+#	
+#		export = Export.find_by_map_id(map.id)
+#		if info[0] != ''
+#			export.geotiff = true
+#			export.size = info[0]
+#			export.width = info[1]
+#			export.height = info[2]
+#			export.cm_per_pixel = 100.0000/pxperm
+#			export.status = 'tiling'
+#			export.save
+#		end
+#	
+#		puts '> generating tiles'
+#		export = Export.find_by_map_id(map.id)
+#		export.tms = true if map.generate_tiles
+#		export.status = 'creating jpg'
+#		export.save
+#
+#		puts '> generating jpg'
+#		export = Export.find_by_map_id(map.id)
+#		export.jpg = true if map.generate_jpg
+#		export.status = 'complete'
+#		export.save
+#	
+#	rescue SystemCallError
+ # 	#	$stderr.print "failed: " + $!
+#		export = Export.find_by_map_id(map.id)
+#		export.status = 'failed'
+#		export.save
+#	end
+ #       render :text => "new Ajax.Updater('formats','/map/formats/#{map.id}')"
   end
 end
