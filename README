@@ -5,6 +5,8 @@
  \___\__,_|_|   \__\__,_|\__, |\___|_| |_|
                          |___/
 
+Cartagen Client
+
 Cartagen is a vector-based, client-side framework for rendering maps in native HTML 5. Maps are styled in GSS, a cascading stylesheet specification for geospatial information – a decision which leverages literacy in CSS to make map styling more accessible. 
 
 http://cartagen.org is a demonstration of the latest release of Cartagen. Test it out, visit places, and create your own maps!
