@@ -1,20 +1,60 @@
-Welcome to the Cartagen framework! If you're a developer looking to edit Cartagen source files, you're in the right place!
+                _                         
+  ___ __ _ _ __| |_ __ _  __ _  ___ _ __  
+ / __/ _` | '__| __/ _` |/ _` |/ _ \ '_ \ 
+| (_| (_| | |  | || (_| | (_| |  __/ | | |
+ \___\__,_|_|   \__\__,_|\__, |\___|_| |_|
+                         |___/
+
+Cartagen is a vector-based, client-side framework for rendering maps in native HTML 5. Maps are styled in GSS, a cascading stylesheet specification for geospatial information – a decision which leverages literacy in CSS to make map styling more accessible. 
+
+http://cartagen.org is a demonstration of the latest release of Cartagen. Test it out, visit places, and create your own maps!
 
 =================================================
-Getting started
+Quick links
+=================================================
 
-The first resource you should look at is the Cartagen Wiki Developer Center:
+Installation Packages: http://github.com/jywarren/cartagen/downloads
+Source Code: http://github.com/jywarren/cartagen
+Cartagen Wiki: http://wiki.cartagen.org/
+API Documentation: http://cartagen.org/api/
+GSS Usage: http://wiki.cartagen.org/wiki/show/GssUsage
+
+=================================================
+What to install
+=================================================
+
+The client edition is the simplest version of Cartagen, and the easiest to get started with – you don’t need a web server to run it. However, you must provide it with static data or every location you want it to load - it cannot dynamically fetch data from a server. Download a copy from: http://github.com/jywarren/cartagen/downloads
+
+Read more at the Cartagen Wiki: http://wiki.cartagen.org/wiki/show/CartagenClient
+
+=================================================
+Requirements
+=================================================
+
+Cartagen Client requires a modern JavaScript browser (recommended: Safari 3+, Firefox 3.1+, Chrome)
+
+=================================================
+Installation
+=================================================
+
+Note: There is a full installation tutorial with screenshots available at http://wiki.cartagen.org/wiki/show/CartagenClient
+
+- Download a copy from: http://github.com/jywarren/cartagen/downloads
+- Decompress the .zip file (This is important - Cartagen cannot run within a .zip file!)
+- Open the folder cartagen-client-0.x.x and open index.html in a web browser.
+- You're done! Now learn how to get your own data set from OpenStreetMap here: http://wiki.cartagen.org/wiki/show/CartagenClient
+
+=================================================
+Documentation
+=================================================
+
+Cartagen usage and documentation is available at http://wiki.cartagen.org, and a periodically downloaded version is available at http://github.com/jywarren/cartagen/downloads. A cached version is included in the /wiki.cartagen.org directory in the source.
+
+=================================================
+Development
+=================================================
+
+If you're interested in developing or modifying the Cartagen client-side source code (cartagen.js), review the README file at /public/cartagen/README, and see the following Wiki pages:
 
 http://wiki.cartagen.org/wiki/show/DeveloperCenter
-
-API Documentation for Cartagen are available at both http://cartagen.org/api/ and also in the Cartagen source at /public/api/index.html
-
-=================================================
-Cartagen source layout
-
 http://wiki.cartagen.org/wiki/show/NavigatingTheSource
-
-=================================================
-Patches
-
-To generate a code patch, look at this good outline for git patch submission: https://rails.lighthouseapp.com/projects/8994/sending-patches
