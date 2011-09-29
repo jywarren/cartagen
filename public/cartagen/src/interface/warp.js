@@ -27,6 +27,7 @@ Tool.Warp = {
 		Tool.add_tool_specific_button("warp_undo",function(){Warper.active_image.undo();},"Undo last image edit","/images/silk-grey/arrow_undo.png","silk last")
 		$('tool_warp_distort').addClassName('down')
 	},
+
 	/**
 	 * Runs when this tool is deselected; removes custom toolbar
 	 */

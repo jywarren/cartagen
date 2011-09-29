@@ -29,6 +29,9 @@ var Keyboard = {
 		"x": function() {
 			localStorage.clear()
 		},
+		"m": function() {
+			Tool.change("Mask")
+		},
 		"r": function() {
 			Tool.unpress(['warp_distort'])
 			$('tool_warp_rotate').addClassName('down')

@@ -479,10 +479,10 @@ Warper.Image = Class.create(
 		//dx += this.points[0].x
 		//dy += this.points[0].y
 		
-		$l($H({
-			'dx, dy': Warper.p([dx, dy]),
-			'px, py': Warper.p([padx, pady])
-		}))
+		//$l($H({
+		//	'dx, dy': Warper.p([dx, dy]),
+		//	'px, py': Warper.p([padx, pady])
+		//}))
 				
 		if (this.image.width) {
 			$C.canvas.drawImage(
