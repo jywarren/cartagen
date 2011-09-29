@@ -6744,6 +6744,7 @@ var Glop = {
 	resize: function(custom_size) {
 		if (!custom_size) { // see Canvas.to_print_data_url()
 			Glop.changed_size = (Glop.width != document.viewport.getWidth() || Glop.height != document.viewport.getHeight()-Config.padding_top)
+			$l(Glop.changed_size)
 			Glop.width = document.viewport.getWidth()
 			Glop.height = document.viewport.getHeight()-Config.padding_top
 		}
@@ -6774,7 +6775,7 @@ var Glop = {
 			Glop.frame += 1
 		} else {
 			Glop.times = []
-		}
+		} //else $l('powersave: '+this.tail)
 		Glop.date = new Date
 	}
 }
@@ -6991,7 +6992,7 @@ var Events = {
 	last_event: 0,
 
 	init: function() {
-		Glop.observe('mousemove', Events.mousemove)
+		document.observe('mousemove', Events.mousemove)
 		Glop.observe('mousedown', Events.mousedown)
 		Glop.observe('mouseup', Events.mouseup)
 		Glop.observe('dblclick', Events.dblclick)
@@ -7570,9 +7571,6 @@ var Keyboard = {
 		"x": function() {
 			localStorage.clear()
 		},
-		"m": function() {
-			Tool.change("Mask")
-		},
 		"r": function() {
 			Tool.unpress(['warp_distort'])
 			$('tool_warp_rotate').addClassName('down')
@@ -7995,7 +7993,7 @@ var Tool = {
 	},
 	update_tooltip: function() {
 		if ($('tooltip')) {
-			$('tooltip').style.top = (-Mouse.y)+'px'
+			$('tooltip').style.top = -Config.padding_top+'px'
 			$('tooltip').style.left = (-Mouse.x)+'px'
 		}
 	},
@@ -8419,7 +8417,6 @@ Tool.Warp = {
 		Tool.add_tool_specific_button("warp_undo",function(){Warper.active_image.undo();},"Undo last image edit","/images/silk-grey/arrow_undo.png","silk last")
 		$('tool_warp_distort').addClassName('down')
 	},
-
 	deactivate: function() {
 		Tool.remove_toolbar("tool_specific")
 		Tool.Warp.mode = 'default'
@@ -8479,14 +8476,13 @@ Tool.Mask = {
 	mode: 'draw', //'draw','inactive','drag'
 	current_poly: null,
 	drag: function() {
+		$l('Mask dragging')
 	},
 	activate: function() {
 		Tool.hide_tooltip()
-		Tool.add_toolbar("tool_specific")
-		Tool.add_tool_specific_button("mask_lock",Tool.Mask.mask_lock,"Lock this image with its mask","/images/silk-grey/lock.png","first silk")
 	},
 	deactivate: function() {
-		Tool.remove_toolbar("tool_specific")
+		$l('Mask deactivated')
 	},
 
 	mousedown: function() {
@@ -8507,8 +8503,10 @@ Tool.Mask = {
 	}.bindAsEventListener(Tool.Mask),
 
 	mouseup: function() {
+		$l('Mask mouseup')
 	}.bindAsEventListener(Tool.Mask),
 	mousemove: function() {
+		$l('Mask mousemove')
 	}.bindAsEventListener(Tool.Mask),
 
 	dblclick: function() {
@@ -8521,6 +8519,15 @@ Tool.Mask = {
 		Tool.Mask.warpable = Warper.active_image
 		Tool.Mask.mode='draw'
 		Tool.Mask.warpable.mask = new Tool.Mask.Shape([],Tool.Mask.warpable)
+	},
+	coordinates: function() {
+		coordinates = []
+		this.points.each(function(point) {
+			var lon = Projection.x_to_lon(-point.x)
+			var lat = Projection.y_to_lat(point.y)
+			coordinates.push([lon,lat])
+		})
+		return coordinates
 	},
 
 	Shape: Class.create({
@@ -8535,17 +8542,8 @@ Tool.Mask = {
 			Glop.observe('mousedown', this.mousedown.bindAsEventListener(this))
 			Glop.observe('mouseup', this.mouseup.bindAsEventListener(this))
 		},
-		coordinates: function() {
-			coordinates = []
-			this.points.each(function(point) {
-				var lon = Projection.x_to_lon(-point.x)
-				var lat = Projection.y_to_lat(point.y)
-				coordinates.push([lon,lat])
-			})
-			return coordinates
-		},
 		new_point: function(x,y) {
-			this.points.push(new Tool.Mask.ControlPoint(x, y, 6, this))
+			this.points.push(new Tool.Mask.ControlPoint(x, y, 6/Map.zoom, this))
 		},
 		mouse_inside: function(){
 			return Geometry.is_point_in_poly(this.points, Map.pointer_x(), Map.pointer_y())
@@ -8619,12 +8617,13 @@ Tool.Mask = {
 				if (this.active) $C.line_width(2/Map.zoom)
 				else $C.line_width(0)
 				$C.begin_path()
-				if (this.points.length > 0) {
+				if (this.points.length>0){
 					$C.move_to(this.points[0].x, this.points[0].y)
 					this.points.each(function(point) {
 						$C.line_to(point.x, point.y)
 					})
 					$C.line_to(this.points[0].x, this.points[0].y)
+
 				}
 				$C.opacity(0.4)
 				$C.stroke()
@@ -8647,7 +8646,7 @@ Tool.Mask = {
 		draw: function() {
 			if (this.parent_shape.parent_image.active) {
 				$C.save()
-					$C.line_width(3/Map.zoom)
+					$C.line_width(2/Map.zoom)
 					$C.translate(this.x,this.y)
 					$C.fill_style("#333")
 					$C.opacity(0.6)
@@ -8659,10 +8658,11 @@ Tool.Mask = {
 						$C.line_to(6/Map.zoom,-6/Map.zoom)
 						$C.stroke()
 					} else {
-						if (this.mouse_inside()) $C.circ(0, 0, this.r/Map.zoom)
-						$C.stroke_circ(0, 0, this.r/Map.zoom)
+						if (this.mouse_inside()) $C.circ(0, 0, this.r)
+						$C.stroke_circ(0, 0, 6)//this.r)
 					}
 				$C.restore()
+
 			}
 
 			/*var nodestring = ''
@@ -8672,13 +8672,16 @@ Tool.Mask = {
 
 			if (this.dragging && Mouse.down) {
 				this.drag()
-			} else if (this.mouse_inside()) {
+			}
+			else if (this.mouse_inside()) {
 				if (Mouse.down) {
 					this.drag()
-				} else {
+				}
+				else {
 					this.hover()
 				}
-			} else {
+			}
+			else {
 				this.base()
 			}
 		},
@@ -9933,6 +9936,10 @@ Warper.Image = Class.create(
 		var padv = pady * dv;
 
 
+		$l($H({
+			'dx, dy': Warper.p([dx, dy]),
+			'px, py': Warper.p([padx, pady])
+		}))
 
 		if (this.image.width) {
 			$C.canvas.drawImage(
