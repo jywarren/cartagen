@@ -6650,7 +6650,7 @@ var Importer = {
 					})
 				} else {
 					data.tags.set(way.tag.k,way.tag.v)
-					if (tag.v == 'coastline') data.coastline = true
+					if (way.tag.v == 'coastline') data.coastline = true
 				}
 			}
 			new Way(data)
