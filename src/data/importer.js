@@ -171,7 +171,7 @@ var Importer = {
 		var finished = false
 		// var req = new Ajax.Request('/api/0.6/map.json?bbox='+_lng1+","+_lat1+','+_lng2+','+_lat2,{
 		var req = new Ajax.Request('/api/0.6/geohash/'+key+'.json',{
-			method: 'get',
+        	method: 'get',
 			onSuccess: function(result) {
 				finished = true
 				// $l('loaded '+_lat1+'&lng1='+_lng1+'&lat2='+_lat2+'&lng2='+_lng2)
