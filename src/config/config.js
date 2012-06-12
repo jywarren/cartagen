@@ -12,6 +12,8 @@ var Config = {
 	live_gss: false,
 	static_map: true,
 	static_map_layers: ["/static/rome/park.js"],
+    layered_map: false,
+    layers: [],
 	/**
 	 * Array of files to load after Cartagen's initialization
 	 * @deprecated

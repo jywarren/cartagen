@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<title>Cartagen</title>
+	<link rel="stylesheet" href="style.css" type="text/css" media="screen" title="no title" charset="utf-8">
+	<!--[if IE]><script type="text/javascript" src="cartagen/excanvas.js"></script><![endif]-->
+	<script src="cartagen.js" type="text/javascript" charset="utf-8"></script>
+	<meta name="viewport" content="width=320; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+	<script type="text/javascript" charset="utf-8">
+        var layers = new Hash()
+        function handleChange(cb) {
+            if(cb.checked)
+                layers.set(cb.value, cb.checked)
+            else
+                layers.unset(cb.value)
+            Cartagen.set_layers(layers.keys())
+        }
+		/*Cartagen.setup({
+			stylesheet: "style.gss",
+			static_map: false,
+			lat: 47.617197,
+            lng: -122.19103,
+			layered_map: true,
+            layers: ['highway'],
+		})*/
+        
+        Cartagen.setup({
+			stylesheet: "style.gss",
+			static_map: true,
+			static_map_layers: [
+				"samples/rome/park.js",
+				"samples/rome/rail.js",
+				"samples/rome/waterway.js",
+				"samples/rome/primary.js",
+				"samples/rome/secondary.js",
+				"samples/rome/building.js",
+				"samples/rome/area.js",
+				// "more.json"
+			],
+			lat: 41.891,
+			lng: 12.4902,
+            layered_map: true,
+			// debug: true
+		})
+	</script>
+</head>
+<body>
+
+<div id="canvas"></div>
+
+<div id="brief">
+	<div class="column first" id="brief_first">
+		<h2><img src="images/cartagen.png" alt="Cartagen"><br />
+			<small>a framework for dynamic mapping<br />
+			by <a href="http://unterbahn.com">Jeffrey Warren</a>
+			<br />
+			<a href="http://wiki.cartagen.org">More Info</a> |
+			<a href="http://code.google.com/p/cartagen/">Source</a> |
+			<a href="http://unterbahn.com/tag/cartagen/">Blog</a>
+			</small></h2>
+		<p><form action="javascript:void(0);">
+			<input type="checkbox" value="Way" onchange='handleChange(this);'/>Way
+            <input type="checkbox" value="highway" onchange='handleChange(this);'/>highway
+            <input type="checkbox" value="secondary" onchange='handleChange(this);'/>secondary
+            <input type="checkbox" value="waterway" onchange='handleChange(this);'/>waterway
+            <input type="checkbox" value="park" onchange='handleChange(this);'/>park
+            <input type="checkbox" value="building" onchange='handleChange(this);'/>building
+		</form></p>
+	</div>
+</div>
+
+</body>
+</html>
