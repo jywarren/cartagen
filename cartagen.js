@@ -5092,6 +5092,8 @@ var Config = {
 	live_gss: false,
 	static_map: true,
 	static_map_layers: ["/static/rome/park.js"],
+    layered_map: false,
+    layers: [],
 	dynamic_layers: [],
 	lat: 41.89685,
 	lng: 12.49715,
@@ -5174,6 +5176,11 @@ var Cartagen = {
 			$('canvas').insert('<canvas style="z-index:20;" id="main"></canvas>')
 			Cartagen.initialize(configs)
 		})
+	},
+    set_layers: function(layers) {
+		Config.layers = layers
+        Geohash.last_get_objects[3] = true
+		Glop.trigger_draw(5)
 	},
 	initialize: function(configs) {
 		Config.init(configs)
@@ -6576,7 +6583,7 @@ var Importer = {
 		Importer.requested_plots++
 		var finished = false
 		var req = new Ajax.Request('/api/0.6/geohash/'+key+'.json',{
-			method: 'get',
+        	method: 'get',
 			onSuccess: function(result) {
 				finished = true
 				Importer.parse_objects(Importer.parse(result.responseText), key)
@@ -8843,6 +8850,7 @@ Object.extend(Geohash, {
 	hash: new Hash(),
 	objects: [],
 	object_hash: new Hash(),
+	layered_object_hash: new Hash(),
 	grid: false,
 	grid_color: 'black',
 	default_length: 6, // default length of geohash
@@ -8860,7 +8868,7 @@ Object.extend(Geohash, {
 			Cartagen.last_loaded_geohash_frame = Glop.frame
 		}
 	},
-	put: function(lat,lon,feature,length) {
+	put: function(lat,lon,feature,length,layers) {
 		if (!length) length = this.default_length
 		var key = this.get_key(lat,lon,length)
 
@@ -8872,12 +8880,38 @@ Object.extend(Geohash, {
 		}
 
 		this.hash.set(key,merge_hash)
+
+        if(Config.layered_map) {
+            if(!this.layered_object_hash.get(key)) {
+                this.layered_object_hash.set(key, new Hash())
+            }
+            layers.each(function(layer) {
+                if(!this.layered_object_hash.get(key).get(layer)) {
+                    this.layered_object_hash.get(key).set(layer, [])
+                }
+                this.layered_object_hash.get(key).get(layer).push(feature)
+            }, this)
+        }
 	},
 	put_object: function(feature) {
+        var layers = [feature.__type__]
+
+        if(Config.layered_map) {
+            feature.tags.each(function(tag) {
+                if (Style.styles.hasOwnProperty(tag.key)) {
+                    layers.push(tag.key)
+                }
+                if (Style.styles.hasOwnProperty(tag.value)) {
+                    layers.push(tag.value)
+                }
+            })
+        }
+
 		this.put(Projection.y_to_lat(feature.y),
 		         Projection.x_to_lon(-feature.x),
 		         feature,
-		         this.get_key_length(feature.width,feature.height))
+		         this.get_key_length(feature.width,feature.height),
+                 layers)
 	},
 	get_key: function(lat,lon,length) {
 		if (!length) length = this.default_length
@@ -8892,7 +8926,20 @@ Object.extend(Geohash, {
 		return this.hash.get(key)
 	},
 	get_from_key: function(key) {
-		return this.hash.get(key) || []
+		if(!Config.layered_map)
+            return this.hash.get(key) || []
+
+        var features = new Hash()
+		if(this.layered_object_hash.get(key)) {
+			Config.layers.each(function(layer) {
+				if(this.layered_object_hash.get(key).get(layer)) {
+					this.layered_object_hash.get(key).get(layer).each(function(feature) {
+						features.set(feature.id, feature)
+					})
+				}
+			}, this)
+		}
+        return features.values()
 	},
 	get_upward: function(key) {
 		key.truncate(this.limit_bottom,'')

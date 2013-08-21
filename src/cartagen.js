@@ -132,6 +132,11 @@ var Cartagen = {
 			Cartagen.initialize(configs)
 		})	
 	},
+    set_layers: function(layers) {
+		Config.layers = layers
+        Geohash.last_get_objects[3] = true
+		Glop.trigger_draw(5)
+	},
 	/**
 	 * Performs initialization tasks, mainly fetching map data. This should never be called directly,
 	 * rather it is intended to be called by setup

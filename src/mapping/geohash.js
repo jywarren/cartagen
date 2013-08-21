@@ -22,6 +22,12 @@ Object.extend(Geohash, {
 	 * the current frame.
 	 */
 	object_hash: new Hash(),
+    /**
+	 * A subset of Geohash.hash that contains layered features that should be drawn for
+	 * the current frame. (geohash -> (layer- > Feature[]))
+	 * @type Hash (String -> (String- > Feature[]))
+	 */
+	layered_object_hash: new Hash(),
 	/**
 	 * If true, a grid of geohashes is drawn on the map
 	 * @type Boolean
@@ -82,7 +88,7 @@ Object.extend(Geohash, {
 	 * @param {Number} length   Length of geohash
 	 * @see Geohash.put_object
 	 */
-	put: function(lat,lon,feature,length) {
+	put: function(lat,lon,feature,length,layers) {
 		if (!length) length = this.default_length
 		var key = this.get_key(lat,lon,length)
 		
@@ -95,6 +101,19 @@ Object.extend(Geohash, {
 		}
 		
 		this.hash.set(key,merge_hash)
+        
+        // populate layered_object_hash
+        if(Config.layered_map) {
+            if(!this.layered_object_hash.get(key)) {
+                this.layered_object_hash.set(key, new Hash())
+            }
+            layers.each(function(layer) {
+                if(!this.layered_object_hash.get(key).get(layer)) {
+                    this.layered_object_hash.get(key).set(layer, [])
+                }
+                this.layered_object_hash.get(key).get(layer).push(feature)
+            }, this)
+        }
 	},
 	/**
 	 * Puts a feature into the geohash index. Finds latitude and longitude from
@@ -106,10 +125,24 @@ Object.extend(Geohash, {
 	 * @see Geohash.get_key_length
 	 */
 	put_object: function(feature) {
+        var layers = [feature.__type__]
+        
+        if(Config.layered_map) {
+            feature.tags.each(function(tag) {
+                if (Style.styles.hasOwnProperty(tag.key)) {
+                    layers.push(tag.key)
+                }
+                if (Style.styles.hasOwnProperty(tag.value)) {
+                    layers.push(tag.value)
+                }
+            })
+        }
+        
 		this.put(Projection.y_to_lat(feature.y),
 		         Projection.x_to_lon(-feature.x),
 		         feature,
-		         this.get_key_length(feature.width,feature.height))
+		         this.get_key_length(feature.width,feature.height),
+                 layers)
 	},
 	/**
 	 * Generates a geohash.
@@ -150,7 +183,20 @@ Object.extend(Geohash, {
 	 * @see Geohash.get_upward
 	 */
 	get_from_key: function(key) {
-		return this.hash.get(key) || []
+		if(!Config.layered_map)
+            return this.hash.get(key) || []
+        
+        var features = new Hash()
+		if(this.layered_object_hash.get(key)) {
+			Config.layers.each(function(layer) {
+				if(this.layered_object_hash.get(key).get(layer)) {
+					this.layered_object_hash.get(key).get(layer).each(function(feature) {
+						features.set(feature.id, feature)
+					})
+				}
+			}, this)
+		}
+        return features.values()
 	},
 	/**
 	 * Fetch features in a geohash from a geohash key, and all shorter keys
