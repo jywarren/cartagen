@@ -398,7 +398,7 @@ Object.extend(Geohash, {
 		// get geohash for each of the 4 corners,
 		this.keys = new Hash
 		
-		this.key_length = this.get_key_length(0.0015/Map.zoom, 0.0015/Map.zoom)
+		this.key_length = this.get_key_length(Config.detail_index/Map.zoom, Config.detail_index/Map.zoom)
 		
 		this.key = this.get_key(Map.lat, Map.lon, this.key_length)
 		

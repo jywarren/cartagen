@@ -5085,6 +5085,7 @@ var Config = {
 	live: false,
 	powersave: true,
 	zoom_out_limit: 0.02,
+	detail_index: 0.0015, // 0.0005 will not skip more detailed features as you zoom out
 	simplify: 1,
 	padding_top: 0,
 	padding_left: 0,
@@ -9059,7 +9060,7 @@ Object.extend(Geohash, {
 
 		this.keys = new Hash
 
-		this.key_length = this.get_key_length(0.0015/Map.zoom, 0.0015/Map.zoom)
+		this.key_length = this.get_key_length(Config.detail_index/Map.zoom, Config.detail_index/Map.zoom)
 
 		this.key = this.get_key(Map.lat, Map.lon, this.key_length)
 
