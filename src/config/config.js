@@ -6,6 +6,7 @@ var Config = {
 	live: false,
 	powersave: true,
 	zoom_out_limit: 0.02,
+	detail_index: 0.0015, // 0.0005 will not skip more detailed features as you zoom out
 	simplify: 1,
 	padding_top: 0,
 	padding_left: 0,
