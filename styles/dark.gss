@@ -1,0 +1,19 @@
+body: {
+	fillStyle: "#f6f6f6",
+	lineWidth: 0
+},
+node: {
+	fillStyle: "#ddd",
+	strokeStyle: "#090",
+	lineWidth: 0,
+	radius: 1
+},
+way: {
+	fillStyle: "#FFEB5D",
+	lineWidth: 0,
+	opacity: 0.6,
+	text: this.user,
+},
+building: {
+	fillStyle: "black"
+}

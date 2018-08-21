@@ -1,0 +1,49 @@
+body: {
+	fillStyle: "#f6f6f6",
+	lineWidth: 0
+},
+node: {
+	fillStyle: "#ddd",
+	strokeStyle: "#090",
+	lineWidth: 0,
+	radius: 1
+},
+way: {
+	strokeStyle: "#ccc",
+	lineWidth: function() {
+		if (this.tags.get('width')) return 0.7*parseInt(this.tags.get('width'))
+		else return 2
+	},
+	fillStyle: "white"
+},
+condition: {
+	strokeStyle: function() {
+		if (this.tags && this.tags.get('condition')) {
+			switch (this.tags.get('condition')) {
+				case "poor":
+					return "red"
+					break
+				case "deficient":
+					return "red"
+					break
+				case "average":
+					return "yellow"
+					break
+				case "fair":
+					return "yellow"
+					break
+				case "excellent":
+					return "green"
+					break
+				case "good":
+					return "green"
+					break
+				default:
+					return "grey"
+					break
+			}
+		} else {
+			return "grey"
+		}
+	}
+}

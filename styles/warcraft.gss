@@ -1,0 +1,71 @@
+body: {
+	fillStyle: "#2a2",
+	lineWidth: 0,
+	pattern: '/styles/images/grass.gif',
+},
+node: {
+},
+way: {
+	strokeStyle: "#333",
+	opacity: 0.3,
+	lineWidth: 3,
+},
+park: {
+	opacity: 0.8,
+	lineWidth: 14,
+	strokeStyle: "#164103",
+	fontSize: 8,
+	pattern: '/styles/images/trees.gif',
+	fontBackground: 'rgba(0,0,0,0.4)',
+	text: function() {
+		if (!this.name) {
+			this.name =  "Enchanted Forest of "
+			if (this.tags.get('name')) this.name += this.tags.get('name')
+			else this.name += 'Doom'
+			if (this.name.substr(-5,5) == " Park") this.name = this.name.substr(0,this.name.length-5)
+		}
+		return this.name
+	}
+},
+waterway: {
+	lineWidth: 0.00001,
+	opacity: 1,
+	pattern: '/styles/images/water.gif',
+},
+water: {
+	lineWidth: 0.00001,
+	opacity: 1,
+	pattern: '/styles/images/water.gif',
+},
+highway: {
+	opacity: 1,
+	outlineWidth: 6,
+	outlineColor: 'rgba(255,255,255,0.1)',
+	strokeStyle: "white",
+	lineWidth: function() {
+		if (this.tags.get('width')) return parseInt(this.tags.get('width'))*0.8
+		else return 10
+	},
+},
+building: {
+	opacity:1,
+	fillStyle: "rgba(10,10,10,0.2)",
+	lineWidth:0.00001,
+	image: function() {
+		var image
+		if (this.area > 100000) image =  "/styles/images/town-hall.gif"
+		if (this.area < 100000) image =  "/styles/images/castle.gif"
+		if (this.area < 70000) image =  "/styles/images/forge.gif"
+		if (this.area < 50000) image =  "/styles/images/tower.gif"
+		if (this.area < 30000) image =  "/styles/images/farm2.gif"
+		if (this.area < 10000) image =  "/styles/images/farm.gif"
+		return image
+	},
+},
+parliament: {
+	image: "/styles/images/town-hall.gif"
+},
+"HM Treasury": {
+	image: "/styles/images/gold-mine.gif",
+	text: "HM Treasury"
+},

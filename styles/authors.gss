@@ -1,0 +1,21 @@
+body: {
+	fillStyle: "#f6f6f6",
+	lineWidth: 0
+},
+node: {
+	fillStyle: "#ddd",
+	strokeStyle: "#090",
+	lineWidth: 0,
+	radius: 1
+},
+way: {
+	fillStyle: function() { 
+		return "#"+(parseInt((this.user),36).toString(16)+"000000").truncate(6,"")
+	},
+	lineWidth: 2,
+	opacity: 0.6,
+	text: this.user,
+	strokeStyle: function() { 
+		return "#"+(parseInt((this.user),36).toString(16)+"000000").truncate(6,"")
+	}
+}

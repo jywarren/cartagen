@@ -1,0 +1,28 @@
+body: {
+	fillStyle: "#fff",
+	lineWidth: 0
+},
+node: {
+	fillStyle: "#ddd",
+	strokeStyle: "#090",
+	lineWidth: 0,
+	radius: 1
+},
+way: {
+	lineWidth: 0.0001,
+},
+primary: {
+	strokeStyle: "white",
+	outlineColor: "#222",
+	outlineWidth: 2,
+	lineWidth: 10,
+},
+secondary: {
+	strokeStyle: "white",
+	outlineColor: "#222",
+	outlineWidth: 2,
+	lineWidth: 6,
+},
+building: {
+	fillStyle: "#222"
+}

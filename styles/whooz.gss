@@ -1,0 +1,42 @@
+body: {
+	fillStyle: "#2a2",
+	lineWidth: 0,
+},
+node: {
+},
+way: {
+	strokeStyle: "#333",
+	opacity: 0.3,
+	lineWidth: 3,
+},
+park: {
+	fillStyle: "white",
+	lineWidth: 3,
+	strokeStyle: "#181",
+	fontColor: "#66f",
+	fontSize: 8,
+},
+waterway: {
+	fillStyle: '#D6DDF1',
+	strokeStyle: "#57d",
+	lineWidth: 0,
+	opacity: 1,
+},
+water: {
+	fillStyle: '#D6DDF1',
+	strokeStyle: "#57d",
+	lineWidth: 0,
+	opacity: 1,
+},
+highway: {
+	opacity: 1,
+	strokeStyle: "white",
+	lineWidth: function() {
+		if (this.tags.get('width')) return parseInt(this.tags.get('width'))*0.8
+		else return 7
+	}
+},
+building: {
+	opacity: 0.6,
+	pattern: "/images/trees.gif"
+}
