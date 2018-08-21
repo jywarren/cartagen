@@ -1,0 +1,27 @@
+{
+  "name": "cartagen",
+  "main": "cartagen.js",
+  "version": "0.7.0",
+  "homepage": "https://github.com/jywarren/cartagen",
+  "authors": [
+    "jywarren <jeff@unterbahn.com>",
+    "benweissmann <ben@benweissmann.com>"
+  ],
+  "description": "Cartagen is a vector-based, client-side framework for rendering maps in native HTML 5. Maps are styled in GSS, a cascading stylesheet specification for geospatial information – a decision which leverages literacy in CSS to make map styling more accessible.",
+  "keywords": [
+    "gis",
+    "mapping",
+    "gss",
+    "vector",
+    "osm"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "wiki.cartagen.org",
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

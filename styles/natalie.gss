@@ -1,0 +1,15 @@
+body: {
+	fillStyle: "white",
+	lineWidth: 0
+},
+node: {
+	fillStyle: "#ddd",
+	strokeStyle: "#090",
+	lineWidth: 0,
+	radius: 1
+},
+way: {
+	strokeStyle: "red",
+	lineWidth: 2,
+	fillStyle: "white"
+}
