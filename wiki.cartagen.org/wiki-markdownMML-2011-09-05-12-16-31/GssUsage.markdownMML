@@ -56,7 +56,7 @@ GSS is capable of handling "dynamic" styles -- styles specified as \JavaScript c
 },
 </pre>
 
-In the above example [essays](http://www.essaywriter.co.uk/services.aspx), the \JavaScript code is executed once, when the element is first loaded. If you want the function to be re-executed periodically, you can specify the interval (in seconds) with the "update" property:
+In the above example, the \JavaScript code is executed once, when the element is first loaded. If you want the function to be re-executed periodically, you can specify the interval (in seconds) with the "update" property:
 
 <pre>way: {
 	strokeStyle: function() { 
