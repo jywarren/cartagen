@@ -53,12 +53,12 @@ building: {
 	lineWidth:0.00001,
 	image: function() {
 		var image
-		if (this.area > 100000) image =  "/styles/images/town-hall.gif"
-		if (this.area < 100000) image =  "/styles/images/castle.gif"
-		if (this.area < 70000) image =  "/styles/images/forge.gif"
-		if (this.area < 50000) image =  "/styles/images/tower.gif"
-		if (this.area < 30000) image =  "/styles/images/farm2.gif"
-		if (this.area < 10000) image =  "/styles/images/farm.gif"
+		if (this.area > 100000) image =  "styles/images/town-hall.gif"
+		if (this.area < 100000) image =  "styles/images/castle.gif"
+		if (this.area < 70000) image =  "styles/images/forge.gif"
+		if (this.area < 50000) image =  "styles/images/tower.gif"
+		if (this.area < 30000) image =  "styles/images/farm2.gif"
+		if (this.area < 10000) image =  "styles/images/farm.gif"
 		return image
 	},
 },
