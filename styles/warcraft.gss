@@ -1,7 +1,7 @@
 body: {
 	fillStyle: "#2a2",
 	lineWidth: 0,
-	pattern: '/styles/images/grass.gif',
+	pattern: 'styles/images/grass.gif',
 },
 node: {
 },
@@ -15,7 +15,7 @@ park: {
 	lineWidth: 14,
 	strokeStyle: "#164103",
 	fontSize: 8,
-	pattern: '/styles/images/trees.gif',
+	pattern: 'styles/images/trees.gif',
 	fontBackground: 'rgba(0,0,0,0.4)',
 	text: function() {
 		if (!this.name) {
@@ -30,12 +30,12 @@ park: {
 waterway: {
 	lineWidth: 0.00001,
 	opacity: 1,
-	pattern: '/styles/images/water.gif',
+	pattern: 'styles/images/water.gif',
 },
 water: {
 	lineWidth: 0.00001,
 	opacity: 1,
-	pattern: '/styles/images/water.gif',
+	pattern: 'styles/images/water.gif',
 },
 highway: {
 	opacity: 1,
@@ -63,9 +63,9 @@ building: {
 	},
 },
 parliament: {
-	image: "/styles/images/town-hall.gif"
+	image: "styles/images/town-hall.gif"
 },
 "HM Treasury": {
-	image: "/styles/images/gold-mine.gif",
+	image: "styles/images/gold-mine.gif",
 	text: "HM Treasury"
 },
